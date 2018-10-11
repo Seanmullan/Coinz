@@ -69,7 +69,7 @@
                 android:textColorHint="@android:color/white" />
         </android.support.design.widget.TextInputLayout>
 
-        <!-- Register Button -->
+        <!-- Register button -->
         <Button
             android:id="@+id/btn_register"
             android:layout_width="fill_parent"
@@ -79,9 +79,9 @@
             android:text="@string/btn_register"
             android:textColor="@android:color/white" />
 
-        <!-- Log in Button -->
+        <!-- Existing member log in button -->
         <Button
-            android:id="@+id/btn_login"
+            android:id="@+id/btn_already_member"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dip"

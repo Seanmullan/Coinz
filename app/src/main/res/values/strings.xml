@@ -12,8 +12,16 @@
     <string name="btn_already_member">Already a member? Log in here </string>
     <string name="btn_forgot_password">Forgot password?</string>
     <string name="auth_failed">Incorrect email or password</string>
-    <string name="error_field_required">This field is required</string>
     <string name="error_password_short">Password too short, enter minimum 6 characters</string>
+    <string name="btn_reset_password">Reset Password</string>
     <string name="title_activity_register">RegisterActivity</string>
+    <string name="btn_back"><![CDATA[<< Back]]></string>
+    <string name="forgot_password_msg">Please enter your email to reset your password</string>
+    <string name="password_reset_msg">We have sent you an email to reset your password</string>
+    <string name="password_reset_failed">Failed to send reset email</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_activity_map">MapActivity</string>
 
 </resources>
