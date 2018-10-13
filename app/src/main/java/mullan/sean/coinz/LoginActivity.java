@@ -88,16 +88,12 @@ public class LoginActivity extends AppCompatActivity {
      */
     private boolean detailsEntered(String email, String password) {
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(getApplicationContext(),
-                    R.string.required_field_email,
-                    Toast.LENGTH_SHORT).show();
+            displayToast(getString(R.string.required_field_email));
             return false;
         }
 
         if (TextUtils.isEmpty(password)) {
-            Toast.makeText(getApplicationContext(),
-                    R.string.required_field_password,
-                    Toast.LENGTH_SHORT).show();
+            displayToast(getString(R.string.required_field_password));
             return false;
         }
         return true;
@@ -117,15 +113,12 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-
                         mProgressBar.setVisibility(View.GONE);
                         if (task.isSuccessful()) {
                             proceedToActivity(MainActivity.class);
                             finish();
                         } else {
-                            Toast.makeText(LoginActivity.this,
-                                    R.string.auth_failed,
-                                    Toast.LENGTH_SHORT).show();
+                            displayToast(getString(R.string.auth_failed));
                         }
                     }
                 });
@@ -139,5 +132,14 @@ public class LoginActivity extends AppCompatActivity {
     private void proceedToActivity(Class activity) {
         Intent intent = new Intent(this, activity);
         startActivity(intent);
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(LoginActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 }

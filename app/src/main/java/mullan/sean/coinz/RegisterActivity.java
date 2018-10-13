@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,17 +13,26 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private FirebaseAuth mAuth;
-    private ProgressBar  mProgressBar;
-    private EditText     mFieldUsername;
-    private EditText     mFieldEmail;
-    private EditText     mFieldPassword;
+    private FirebaseFirestore   mFirestore;
+    private FirebaseAuth        mAuth;
+    private ProgressBar         mProgressBar;
+    private EditText            mFieldUsername;
+    private EditText            mFieldEmail;
+    private EditText            mFieldPassword;
 
     /*
      *  @brief  { Display registration view, set listeners for buttons and
@@ -33,8 +43,9 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Get Firebase authentication instance
-        mAuth = FirebaseAuth.getInstance();
+        // Get Firebase firestore and authentication instances
+        mFirestore = FirebaseFirestore.getInstance();
+        mAuth      = FirebaseAuth.getInstance();
 
         // Views
         mProgressBar   = findViewById(R.id.progressBar);
@@ -86,23 +97,17 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         if (TextUtils.isEmpty(email)) {
-            Toast.makeText(getApplicationContext(),
-                    R.string.required_field_email,
-                    Toast.LENGTH_SHORT).show();
+            displayToast(getString(R.string.required_field_email));
             return false;
         }
 
         if (TextUtils.isEmpty(password)) {
-            Toast.makeText(getApplicationContext(),
-                    R.string.required_field_password,
-                    Toast.LENGTH_SHORT).show();
+            displayToast(getString(R.string.required_field_password));
             return false;
         }
 
         if (password.length() < 6) {
-            Toast.makeText(getApplicationContext(),
-                    R.string.error_password_short,
-                    Toast.LENGTH_SHORT).show();
+            displayToast(getString(R.string.error_password_short));
             return false;
         }
         return true;
@@ -113,7 +118,7 @@ public class RegisterActivity extends AppCompatActivity {
      *            create document for user in database and proceed to the main
      *            activity. If unsuccessful, print task exception.
      */
-    private void createUserAccount(String username, String email, String password) {
+    private void createUserAccount(final String username, final String email, String password) {
         mProgressBar.setVisibility(View.VISIBLE);
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
@@ -121,20 +126,49 @@ public class RegisterActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(RegisterActivity.this,
-                                    R.string.registration_success,
-                                    Toast.LENGTH_SHORT).show();
-                            // TODO(Sean): Create Document with User ID and add username as field
+                            displayToast(getString(R.string.registration_success));
+                            addUserToDatabase(username, email);
                             proceedToActivity(MainActivity.class);
                             finish();
                         } else {
-                            Toast.makeText(RegisterActivity.this,
-                                    getString(R.string.registration_fail) + task.getException(),
-                                    Toast.LENGTH_SHORT).show();
+                            displayToast(getString(R.string.registration_fail) + task.getException());
                         }
                         mProgressBar.setVisibility(View.GONE);
                     }
                 });
+    }
+
+    /*
+     *  @brief  { Create a document for user in the database using the users unique ID
+     *            and add the required fields to the document }
+     *
+     *  @params { Users username and email }
+     */
+    private void addUserToDatabase(String username, String email) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("username", username);
+        userData.put("email", email);
+        userData.put("gold", 0);
+        userData.put("lastSavedDate", LocalDate.now().toString());
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            String uid = user.getUid();
+            mFirestore.collection("users").document(uid).set(userData)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.w("REG", "Document successfully added");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w("REG", "Error adding document", e);
+                        }
+                    });
+        } else {
+            displayToast(getString(R.string.user_null_pointer));
+        }
     }
 
     /*
@@ -145,5 +179,14 @@ public class RegisterActivity extends AppCompatActivity {
     private void proceedToActivity(Class activity) {
         Intent intent = new Intent(this, activity);
         startActivity(intent);
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 }

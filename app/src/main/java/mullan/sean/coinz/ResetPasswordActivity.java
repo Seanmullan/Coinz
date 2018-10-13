@@ -46,9 +46,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String email = mInputEmail.getText().toString().trim();
                 if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplication(),
-                            R.string.reset_email,
-                            Toast.LENGTH_SHORT).show();
+                    displayToast(getString(R.string.reset_email));
                 } else {
                     resetPassword(email);
                 }
@@ -75,16 +73,21 @@ public class ResetPasswordActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(ResetPasswordActivity.this,
-                                    getString(R.string.password_reset_msg),
-                                    Toast.LENGTH_SHORT).show();
+                            displayToast(getString(R.string.password_reset_msg));
                         } else {
-                            Toast.makeText(ResetPasswordActivity.this,
-                                    getString(R.string.password_reset_failed),
-                                    Toast.LENGTH_SHORT).show();
+                            displayToast(getString(R.string.password_reset_failed));
                         }
                         mProgressBar.setVisibility(View.GONE);
                     }
                 });
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(ResetPasswordActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 }

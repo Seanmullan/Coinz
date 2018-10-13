@@ -39,5 +39,6 @@
     <string name="registration_success">User successfully registered</string>
     <string name="registration_fail">Registration failed</string>
     <string name="reset_email">Enter your registered email address</string>
+    <string name="user_null_pointer">User not logged in</string>
 
 </resources>
