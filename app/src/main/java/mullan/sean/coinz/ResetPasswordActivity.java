@@ -20,6 +20,10 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private EditText     mInputEmail;
     private ProgressBar  mProgressBar;
 
+    /*
+     *  @brief  { Set reset password view, create listeners for buttons and parse
+     *            entered user data }
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,30 +40,18 @@ public class ResetPasswordActivity extends AppCompatActivity {
         Button btnReset = findViewById(R.id.btn_reset_password);
         Button btnBack  = findViewById(R.id.btn_back);
 
+        // Reset password if email field is filled
         btnReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 String email = mInputEmail.getText().toString().trim();
-
                 if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplication(), "Enter your registered email address", Toast.LENGTH_SHORT).show();
-                    return;
+                    Toast.makeText(getApplication(),
+                            R.string.reset_email,
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    resetPassword(email);
                 }
-
-                mProgressBar.setVisibility(View.VISIBLE);
-                mAuth.sendPasswordResetEmail(email)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(ResetPasswordActivity.this, getString(R.string.password_reset_msg), Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(ResetPasswordActivity.this, getString(R.string.password_reset_failed), Toast.LENGTH_SHORT).show();
-                                }
-                                mProgressBar.setVisibility(View.GONE);
-                            }
-                        });
             }
         });
 
@@ -69,5 +61,30 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    /*
+     *  @brief  { Send email to reset users password }
+     *
+     *  @params { User entered email }
+     */
+    private void resetPassword(String email) {
+        mProgressBar.setVisibility(View.VISIBLE);
+        mAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(ResetPasswordActivity.this,
+                                    getString(R.string.password_reset_msg),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ResetPasswordActivity.this,
+                                    getString(R.string.password_reset_failed),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        mProgressBar.setVisibility(View.GONE);
+                    }
+                });
     }
 }
