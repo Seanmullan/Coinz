@@ -32,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Check if user is already logged in
         if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(LoginActivity.this, MapActivity.class));
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
             finish();
         }
 
@@ -74,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         mProgressBar.setVisibility(View.GONE);
                         if (task.isSuccessful()) {
-                            startActivity(new Intent(LoginActivity.this, MapActivity.class));
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
                             finish();
                         } else {
                             Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_SHORT).show();

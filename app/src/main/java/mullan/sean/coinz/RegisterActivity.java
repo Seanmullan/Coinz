@@ -78,7 +78,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(RegisterActivity.this, "User successfully registered", Toast.LENGTH_SHORT).show();
                                     // TODO(Sean): Create Document with User ID and add username as field
-                                    startActivity(new Intent (RegisterActivity.this, MapActivity.class));
+                                    startActivity(new Intent (RegisterActivity.this, MainActivity.class));
                                     finish();
                                 } else {
                                     Toast.makeText(RegisterActivity.this, "Authentication failed" + task.getException(), Toast.LENGTH_SHORT).show();
