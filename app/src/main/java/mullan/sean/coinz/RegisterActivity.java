@@ -24,6 +24,10 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText     mFieldEmail;
     private EditText     mFieldPassword;
 
+    /*
+     *  @brief  { Display registration view, set listeners for buttons and
+     *            parse user entered data }
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,51 +54,96 @@ public class RegisterActivity extends AppCompatActivity {
                 String email    = mFieldEmail.getText().toString().trim();
                 String password = mFieldPassword.getText().toString().trim();
 
-                if (TextUtils.isEmpty(username)) {
-                    Toast.makeText(getApplicationContext(), "Enter username", Toast.LENGTH_SHORT).show();
-                    return;
+                // Check validity of user entered details. Create account if valid
+                if (detailsValid(username, email, password)) {
+                    createUserAccount(username, email, password);
                 }
-
-                if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplicationContext(), "Enter email address", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Enter password", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (password.length() < 6) {
-                    Toast.makeText(getApplicationContext(), getString(R.string.error_password_short), Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                mProgressBar.setVisibility(View.VISIBLE);
-                mAuth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(RegisterActivity.this, "User successfully registered", Toast.LENGTH_SHORT).show();
-                                    // TODO(Sean): Create Document with User ID and add username as field
-                                    startActivity(new Intent (RegisterActivity.this, MainActivity.class));
-                                    finish();
-                                } else {
-                                    Toast.makeText(RegisterActivity.this, "Authentication failed" + task.getException(), Toast.LENGTH_SHORT).show();
-                                }
-                                mProgressBar.setVisibility(View.GONE);
-                            }
-                        });
             }
         });
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                proceedToActivity(LoginActivity.class);
             }
         });
     }
 
+    /*
+     *  @brief   { Checks that fields have been filled and that password is at least
+     *             6 characters in length }
+     *
+     *  @params  { String username, String email, String password }
+     *
+     *  @return  { True if details are valid, false otherwise }
+     */
+    private boolean detailsValid(String username, String email, String password) {
+        if (TextUtils.isEmpty(username)) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.required_field_username,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (TextUtils.isEmpty(email)) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.required_field_email,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.required_field_password,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (password.length() < 6) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.error_password_short,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    /*
+     *  @brief  { Attempt to create a user account on firebase. If successful,
+     *            create document for user in database and proceed to the main
+     *            activity. If unsuccessful, print task exception.
+     */
+    private void createUserAccount(String username, String email, String password) {
+        mProgressBar.setVisibility(View.VISIBLE);
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(RegisterActivity.this,
+                                    R.string.registration_success,
+                                    Toast.LENGTH_SHORT).show();
+                            // TODO(Sean): Create Document with User ID and add username as field
+                            proceedToActivity(MainActivity.class);
+                            finish();
+                        } else {
+                            Toast.makeText(RegisterActivity.this,
+                                    getString(R.string.registration_fail) + task.getException(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        mProgressBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    /*
+     *  @brief { Start new activity }
+     *
+     *  @params { Class of intended activity }
+     */
+    private void proceedToActivity(Class activity) {
+        Intent intent = new Intent(this, activity);
+        startActivity(intent);
+    }
 }

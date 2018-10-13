@@ -19,6 +19,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
 
+    /*
+     *  @brief  { Set main activity view, load in map fragment as default
+     *            and create a listener for the user authentication state }
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,22 +31,24 @@ public class MainActivity extends AppCompatActivity {
         // Get Firebase instance
         mAuth = FirebaseAuth.getInstance();
 
-        Toolbar mTopToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        // Set up toolbar
+        Toolbar mTopToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(mTopToolbar);
 
+        // Set up bottom navigation
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         // Load map fragment by default
         loadFragment(new MapFragment());
 
+        // Create firebase authentication listener
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user == null) {
                     // user auth state is changed - user is null
-                    // launch login activity
                     startActivity(new Intent(MainActivity.this, LoginActivity.class));
                     finish();
                 }
@@ -50,6 +56,11 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    /*
+     *  @brief  { Controls the basic navigation of the application. When a
+     *            button is selected on the navigation bar, the corresponding
+     *            fragment is loaded }
+     */
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -82,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /*
+     *  @brief { Load the appropriate fragment into the container }
+     *
+     *  @params  { The fragment to be loaded }
+     */
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.frame_container, fragment);
@@ -89,6 +105,19 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
     }
 
+    /*
+     *  @brief  { Set up the toolbar overflow menu }
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    /*
+     *  @brief  { Handles logic for overflow menu, including log out }
+     *  TODO: Add a "help" option to menu
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -97,36 +126,37 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
+                // Action was not recognized, invoke the superclass to handle it
                 return super.onOptionsItemSelected(item);
-
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
-        return true;
-    }
-
+    /*
+     *  @brief  { Invoke superclass to resume application }
+     */
     @Override
     protected void onResume() {
         super.onResume();
     }
 
+    /*
+     *  @brief  { Add authentication state listener to firebase authentication
+     *            instance }
+     */
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
     }
 
+    /*
+     *  @brief  { Remove authentication state listener if activity is stopped }
+     */
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
-
 }

@@ -23,6 +23,10 @@ public class LoginActivity extends AppCompatActivity {
     private EditText     mFieldEmail;
     private EditText     mFieldPassword;
 
+    /*
+     *  @brief  { Set log in view, create listeners for buttons and parse
+     *            entered user data }
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +36,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Check if user is already logged in
         if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            proceedToActivity(MainActivity.class);
             finish();
         }
 
@@ -54,48 +58,86 @@ public class LoginActivity extends AppCompatActivity {
                 String email    = mFieldEmail.getText().toString().trim();
                 String password = mFieldPassword.getText().toString().trim();
 
-                if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplicationContext(), "Enter email address", Toast.LENGTH_SHORT).show();
-                    return;
+                if (detailsEntered(email, password)) {
+                    authenticateUser(email, password);
                 }
-
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Enter password", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                mProgressBar.setVisibility(View.VISIBLE);
-
-                // Authenticate user
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-
-                        mProgressBar.setVisibility(View.GONE);
-                        if (task.isSuccessful()) {
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            finish();
-                        } else {
-                            Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
             }
         });
 
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+                proceedToActivity(RegisterActivity.class);
             }
         });
 
         btnResetPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, ResetPasswordActivity.class));
+                proceedToActivity(ResetPasswordActivity.class);
             }
         });
+    }
+
+    /*
+     *  @brief  { Check that fields are not empty }
+     *
+     *  @params { User entered email and password }
+     *
+     *  @return { True if fields are not empty, false otherwise }
+     */
+    private boolean detailsEntered(String email, String password) {
+        if (TextUtils.isEmpty(email)) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.required_field_email,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            Toast.makeText(getApplicationContext(),
+                    R.string.required_field_password,
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    /*
+     *  @brief  { Authenticate email and password with firebase, proceed
+     *            to main activity if details are correct }
+     *
+     *  @params { User entered email and password }
+     */
+    private void authenticateUser(String email, String password) {
+        mProgressBar.setVisibility(View.VISIBLE);
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(LoginActivity.this,
+                        new OnCompleteListener<AuthResult>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+
+                        mProgressBar.setVisibility(View.GONE);
+                        if (task.isSuccessful()) {
+                            proceedToActivity(MainActivity.class);
+                            finish();
+                        } else {
+                            Toast.makeText(LoginActivity.this,
+                                    R.string.auth_failed,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    /*
+     *  @brief { Start new activity }
+     *
+     *  @params { Class of intended activity }
+     */
+    private void proceedToActivity(Class activity) {
+        Intent intent = new Intent(this, activity);
+        startActivity(intent);
     }
 }
