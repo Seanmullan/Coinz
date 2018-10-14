@@ -11,26 +11,23 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
+
 import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
-
-    private final String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
-    private final String mapJson = "/coinzmap.geojson";
-    private JSONObject mapData;
-    private String jsonData;
+    private JSONObject   exchangeRates;
+    private JSONArray    coinData;
 
     /*
      *  @brief  { Set main activity view, load in map fragment as default
@@ -178,23 +175,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getMapData() {
+        String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
+        String mapJson = "/coinzmap.geojson";
         String url = mapUrl + getDate() + mapJson;
-        String data;
         DownloadFileTask downloadTask = new DownloadFileTask(getApplicationContext(), new OnEventListener<String>() {
+
             @Override
             public void onSuccess(String result) {
-                jsonData = result;
                 try {
-                    mapData = parseJsonString(jsonData);
-                    Log.d("MAIN", "Successfully got data");
+                    Log.d("MAIN", "Successfully retrieved map data");
+                    parseJsonString(result);
+                    MapFragment.setMapData(coinData);
                 } catch (JSONException e) {
-                    Log.d("MAIN", "Failed to get data" + e.toString());
+                    Log.d("MAIN", "Failed to parse json data" + e.toString());
                 }
             }
 
             @Override
             public void onFailure(Exception e) {
-                // Toast.makeText(getApplicationContext(), "ERROR: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Log.d("MAIN", "Download task failed: " + e.toString());
             }
         });
         downloadTask.execute(url);
@@ -206,7 +205,9 @@ public class MainActivity extends AppCompatActivity {
         return dateFormat.format(date);
     }
 
-    private JSONObject parseJsonString(String json) throws JSONException {
-        return new JSONObject(json);
+    private void parseJsonString(String json) throws JSONException {
+        JSONObject mapData = new JSONObject(json);
+        exchangeRates = (JSONObject) mapData.get("rates");
+        coinData = (JSONArray) mapData.get("features");
     }
 }

@@ -8,6 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class MapFragment extends Fragment {
 
     public MapFragment() {
@@ -33,7 +36,7 @@ public class MapFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
-    public void call() {
+    public static void setMapData(JSONArray coinData) {
 
     }
 }
