@@ -32,4 +32,8 @@ public class MapFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
+
+    public void call() {
+
+    }
 }

@@ -8,16 +8,29 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseAuth mAuth;
+
+    private final String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
+    private final String mapJson = "/coinzmap.geojson";
+    private JSONObject mapData;
+    private String jsonData;
 
     /*
      *  @brief  { Set main activity view, load in map fragment as default
@@ -38,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
         // Set up bottom navigation
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        // Fetch json map data
+        getMapData();
 
         // Load map fragment by default
         loadFragment(new MapFragment());
@@ -147,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+
     }
 
     /*
@@ -158,5 +175,38 @@ public class MainActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+    }
+
+    public void getMapData() {
+        String url = mapUrl + getDate() + mapJson;
+        String data;
+        DownloadFileTask downloadTask = new DownloadFileTask(getApplicationContext(), new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String result) {
+                jsonData = result;
+                try {
+                    mapData = parseJsonString(jsonData);
+                    Log.d("MAIN", "Successfully got data");
+                } catch (JSONException e) {
+                    Log.d("MAIN", "Failed to get data" + e.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Toast.makeText(getApplicationContext(), "ERROR: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        downloadTask.execute(url);
+    }
+
+    private String getDate() {
+        LocalDateTime date = LocalDateTime.now();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
+        return dateFormat.format(date);
+    }
+
+    private JSONObject parseJsonString(String json) throws JSONException {
+        return new JSONObject(json);
     }
 }
