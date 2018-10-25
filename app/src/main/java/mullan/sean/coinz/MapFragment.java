@@ -37,6 +37,10 @@ public class MapFragment extends Fragment {
     }
 
     public static void setMapData(JSONArray coinData) {
+        updateMapView(coinData);
+    }
 
+    private static void updateMapView(JSONArray coinData) {
+        // TODO: Update the mapbox view
     }
 }

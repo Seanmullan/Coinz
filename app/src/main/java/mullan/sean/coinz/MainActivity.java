@@ -12,22 +12,31 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.Map;
 
 import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private FirebaseAuth mAuth;
-    private JSONObject   exchangeRates;
-    private JSONArray    coinData;
+    private FirebaseFirestore mFirestore;
+    private DocumentSnapshot  mUserDoc;
+    private FirebaseAuth      mAuth;
+    private FirebaseUser      mUser;
+    private JSONObject        mExchangeRates;
+    private JSONArray         mCoinData;
 
     /*
      *  @brief  { Set main activity view, load in map fragment as default
@@ -38,8 +47,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Get Firebase instance
-        mAuth = FirebaseAuth.getInstance();
+        // Get authentication and user references
+        mFirestore = FirebaseFirestore.getInstance();
+        mAuth      = FirebaseAuth.getInstance();
+        mUser      = mAuth.getCurrentUser();
+
+        // Get user document reference
+        getUserDocument(mUser.getUid());
 
         // Set up toolbar
         Toolbar mTopToolbar = findViewById(R.id.my_toolbar);
@@ -48,9 +62,6 @@ public class MainActivity extends AppCompatActivity {
         // Set up bottom navigation
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-        // Fetch json map data
-        getMapData();
 
         // Load map fragment by default
         loadFragment(new MapFragment());
@@ -174,10 +185,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void getUserDocument(final String uid) {
+        DocumentReference docRef = mFirestore.collection("users").document(uid);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document != null) {
+                        // Initialise user document reference and retrieve map data
+                        mUserDoc = document;
+                        getMapData();
+                    } else {
+                        Log.d("MAIN", "Failed to retrieve user document with ID " + uid);
+                    }
+                } else {
+                    Log.d("MAIN", "User document get failed with ", task.getException());
+                }
+            }
+        });
+    }
+
     public void getMapData() {
+        String lastSavedDate = mUserDoc.getString("lastSavedDate");
+        String currentDate   = getCurrentDate();
+        if (lastSavedDate.equals(currentDate)) {
+            //TODO: Retrieve map data from coins subcollection
+        } else {
+            retrieveNewMapData();
+        }
+    }
+
+    private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
-        String url = mapUrl + getDate() + mapJson;
+        String url = mapUrl + getCurrentDate() + mapJson;
         DownloadFileTask downloadTask = new DownloadFileTask(getApplicationContext(), new OnEventListener<String>() {
 
             @Override
@@ -185,7 +227,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Log.d("MAIN", "Successfully retrieved map data");
                     parseJsonString(result);
-                    MapFragment.setMapData(coinData);
+                    updateMapDataOnFirebase();
+                    MapFragment.setMapData(mCoinData);
                 } catch (JSONException e) {
                     Log.d("MAIN", "Failed to parse json data" + e.toString());
                 }
@@ -199,7 +242,11 @@ public class MainActivity extends AppCompatActivity {
         downloadTask.execute(url);
     }
 
-    private String getDate() {
+    private void retrieveExistingMapData() {
+        // TODO: Locate coins subcolleciton of user document. Populate arraylist of coins with data
+    }
+
+    private String getCurrentDate() {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
         return dateFormat.format(date);
@@ -207,7 +254,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void parseJsonString(String json) throws JSONException {
         JSONObject mapData = new JSONObject(json);
-        exchangeRates = (JSONObject) mapData.get("rates");
-        coinData = (JSONArray) mapData.get("features");
+        mExchangeRates = (JSONObject) mapData.get("rates");
+        mCoinData = (JSONArray) mapData.get("features");
+        // TODO: here, populate ArrayList of coins
+    }
+
+    private void updateMapDataOnFirebase() {
+        //TODO: Take coin data json. For each JSON Object in mCoinData, populate ArrayList of coins
+
     }
 }

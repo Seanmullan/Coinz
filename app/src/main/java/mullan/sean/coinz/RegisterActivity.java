@@ -21,7 +21,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -149,7 +148,7 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("username", username);
         userData.put("email", email);
         userData.put("gold", 0);
-        userData.put("lastSavedDate", LocalDate.now().toString());
+        userData.put("lastSavedDate", "");
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             String uid = user.getUid();
