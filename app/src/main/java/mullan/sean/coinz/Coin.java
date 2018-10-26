@@ -7,9 +7,9 @@ public class Coin {
     private String   currency;
     private String   symbol;
     private String   colour;
-    private Geometry location;
+    private Location location;
 
-    public Coin(String id, double value, String currency, String symbol, String colour, Geometry location) {
+    public Coin(String id, double value, String currency, String symbol, String colour, Location location) {
         this.id = id;
         this.value = value;
         this.currency = currency;
@@ -58,11 +58,11 @@ public class Coin {
         this.colour = colour;
     }
 
-    public Geometry getLocation() {
+    public Location getLocation() {
         return location;
     }
 
-    public void setLocation(Geometry location) {
+    public void setLocation(Location location) {
         this.location = location;
     }
 }

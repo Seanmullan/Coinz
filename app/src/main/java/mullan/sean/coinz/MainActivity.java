@@ -13,8 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -24,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Locale;
 
 import org.json.*;
@@ -52,7 +51,9 @@ public class MainActivity extends AppCompatActivity {
         mAuth      = FirebaseAuth.getInstance();
         mUser      = mAuth.getCurrentUser();
 
-        // Get user document reference
+        // Get user document reference. Upon successful completion of this method,
+        // populateData() will be called in order to retrieve new data if a new day
+        // has begun, or existing data otherwise.
         getUserDocument(mUser.getUid());
 
         // Set up toolbar
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     if (document != null) {
                         // Initialise user document reference and retrieve map data
                         mUserDoc = document;
-                        getMapData();
+                        populateData();
                     } else {
                         Log.d("MAIN", "Failed to retrieve user document with ID " + uid);
                     }
@@ -206,12 +207,50 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void getMapData() {
+    private void populateData() {
         String lastSavedDate = mUserDoc.getString("lastSavedDate");
         String currentDate   = getCurrentDate();
+
+        if (lastSavedDate == null || currentDate == null) {
+            Log.d("MAIN", "Saved date or current date is null");
+            return;
+        }
+
+        // If a new day has not yet begun, invoke the Data class to retrieve existing data
         if (lastSavedDate.equals(currentDate)) {
-            //TODO: Retrieve map data from coins subcollection
+            Data.populateData(new OnEventListener() {
+                @Override
+                public void onSuccess(Object object) {
+                    Log.d("MAIN", "Successfully populated data");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Data population failed");
+                }
+            });
+
+        // If a new day has begun, clear the data from the previous day and fetch the new data
         } else {
+            Data.clearUncollectedCoins(new OnEventListener() {
+                @Override
+                public void onSuccess(Object object) {
+                    Log.d("MAIN", "Successfully cleared uncollected coins");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Could not clear uncollected coins with exception: ", e);
+                }
+            });
+            Data.clearCollectedCoins(new OnEventListener() {
+                @Override
+                public void onSuccess(Object object) {
+                    Log.d("MAIN", "Successfully cleared collected coins");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Could not clear collected coins with exception: ", e);
+                }
+            });
             retrieveNewMapData();
         }
     }
@@ -221,19 +260,16 @@ public class MainActivity extends AppCompatActivity {
         String mapJson = "/coinzmap.geojson";
         String url = mapUrl + getCurrentDate() + mapJson;
         DownloadFileTask downloadTask = new DownloadFileTask(getApplicationContext(), new OnEventListener<String>() {
-
             @Override
             public void onSuccess(String result) {
                 try {
-                    Log.d("MAIN", "Successfully retrieved map data");
-                    parseJsonString(result);
-                    updateMapDataOnFirebase();
-                    MapFragment.setMapData(mCoinData);
+                    Log.d("MAIN", "Successfully retrieved map data from Informatics server");
+                    processNewMapData(result);
+                    // MapFragment.setMapData(mCoinData);
                 } catch (JSONException e) {
                     Log.d("MAIN", "Failed to parse json data" + e.toString());
                 }
             }
-
             @Override
             public void onFailure(Exception e) {
                 Log.d("MAIN", "Download task failed: " + e.toString());
@@ -242,25 +278,46 @@ public class MainActivity extends AppCompatActivity {
         downloadTask.execute(url);
     }
 
-    private void retrieveExistingMapData() {
-        // TODO: Locate coins subcolleciton of user document. Populate arraylist of coins with data
-    }
-
     private String getCurrentDate() {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
+
         return dateFormat.format(date);
     }
 
-    private void parseJsonString(String json) throws JSONException {
+    private void processNewMapData(String json) throws JSONException {
         JSONObject mapData = new JSONObject(json);
-        mExchangeRates = (JSONObject) mapData.get("rates");
-        mCoinData = (JSONArray) mapData.get("features");
-        // TODO: here, populate ArrayList of coins
-    }
+        mExchangeRates     = mapData.getJSONObject("rates");
+        mCoinData          = mapData.getJSONArray("features");
 
-    private void updateMapDataOnFirebase() {
-        //TODO: Take coin data json. For each JSON Object in mCoinData, populate ArrayList of coins
+        for (int i = 0; i < mCoinData.length(); i++) {
+            // Extract json data
+            JSONObject coinJson       = mCoinData.getJSONObject(i);
+            JSONObject coinProperties = coinJson.getJSONObject("properties");
+            JSONArray  coords         = coinJson.getJSONObject("geometry").getJSONArray("coordinates");
 
+            // Parse json data into coin attributes
+            final String id = coinProperties.getString("id");
+            Double value    = Double.parseDouble(coinProperties.getString("value"));
+            String currency = coinProperties.getString("currency");
+            String symbol   = coinProperties.getString("marker-symbol");
+            String colour   = coinProperties.getString("marker-color");
+
+            // Create location object from coin coordinates
+            Location location = new Location(coords.getDouble(0), coords.getDouble(1));
+
+            // Create coin from parsed data and add it to uncollected coins in Data class
+            Coin coin = new Coin(id, value, currency, symbol, colour, location);
+            Data.addUncollectedCoin(coin, new OnEventListener() {
+                @Override
+                public void onSuccess(Object object) {
+                    Log.d("MAIN", "Coin successfully added with ID: " + id);
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Failed to add coin with exception ", e);
+                }
+            });
+        }
     }
 }
