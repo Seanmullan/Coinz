@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -22,7 +23,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Locale;
 
 import org.json.*;
@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore mFirestore;
     private DocumentSnapshot  mUserDoc;
     private FirebaseAuth      mAuth;
-    private FirebaseUser      mUser;
     private JSONObject        mExchangeRates;
     private JSONArray         mCoinData;
 
@@ -46,15 +45,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Get authentication and user references
+        // Get firestore and authentication references
         mFirestore = FirebaseFirestore.getInstance();
         mAuth      = FirebaseAuth.getInstance();
-        mUser      = mAuth.getCurrentUser();
 
         // Get user document reference. Upon successful completion of this method,
         // populateData() will be called in order to retrieve new data if a new day
         // has begun, or existing data otherwise.
-        getUserDocument(mUser.getUid());
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            getUserDocument(user.getUid());
+        }
 
         // Set up toolbar
         Toolbar mTopToolbar = findViewById(R.id.my_toolbar);
@@ -186,8 +187,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+     *  @brief  { This method begins the process of data retrieval upon boot up.
+     *            The first step is to retrieve the users document, then the Data
+     *            class is populated given the users document. See the populateData()
+     *            method for details. }
+     */
     private void getUserDocument(final String uid) {
         DocumentReference docRef = mFirestore.collection("users").document(uid);
+        Data.init(docRef);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -207,6 +215,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /*
+     *  @brief  { This procedure will prompt the data class to pull in the appropriate
+     *            data from firebase and populate the relevant fields in the Data class.
+     *
+     *            We want to retrieve existing data if a new day has not begun. This case
+     *            arises if the user closes the app and reopens it on the same day, then
+     *            we want to fetch the users uncollected, collected and received coins.
+     *
+     *            If a new day has begun, then we want to execute the following steps:
+     *              1) Update the last saved date for the user on firebase
+     *              2) Clear uncollected coins so that they can be replaced with new coins
+     *              3) Clear 'spare change' i.e. collected coins and received coins
+     *              4) Retrieve the new map data from the Informatics server
+     *              5) Parse the received data
+     *              6) Update the Data class fields and firebase with the new data
+     *
+     *            When these processes are completed, the Map Fragment is prompted to
+     *            retrieve the most up to date data from the Data class. }
+     */
+    @SuppressWarnings("unchecked")
     private void populateData() {
         String lastSavedDate = mUserDoc.getString("lastSavedDate");
         String currentDate   = getCurrentDate();
@@ -218,10 +246,11 @@ public class MainActivity extends AppCompatActivity {
 
         // If a new day has not yet begun, invoke the Data class to retrieve existing data
         if (lastSavedDate.equals(currentDate)) {
-            Data.populateData(new OnEventListener() {
+            Data.retrieveExistingData(new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Successfully populated data");
+                    MapFragment.updateMapData();
                 }
                 @Override
                 public void onFailure(Exception e) {
@@ -231,7 +260,8 @@ public class MainActivity extends AppCompatActivity {
 
         // If a new day has begun, clear the data from the previous day and fetch the new data
         } else {
-            Data.clearUncollectedCoins(new OnEventListener() {
+            // TODO: Update date with current date on firebase
+            Data.clearUncollectedCoins(this.getApplicationContext(), new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Successfully cleared uncollected coins");
@@ -255,6 +285,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+     *  @brief  { Retrieves that json map data from Informatics server. Upon successful
+     *            retrieval, processNewMapData is called to parse the data and store it
+     *            in the Data class }
+     */
     private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
@@ -265,7 +300,6 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Log.d("MAIN", "Successfully retrieved map data from Informatics server");
                     processNewMapData(result);
-                    // MapFragment.setMapData(mCoinData);
                 } catch (JSONException e) {
                     Log.d("MAIN", "Failed to parse json data" + e.toString());
                 }
@@ -278,13 +312,22 @@ public class MainActivity extends AppCompatActivity {
         downloadTask.execute(url);
     }
 
+    /*
+     *  @return  { Current date in format yyyy/mm/dd }
+     */
     private String getCurrentDate() {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
-
         return dateFormat.format(date);
     }
 
+    /*
+     *  @brief  { Extracts the json data into exchange rates and coin data.
+     *            The coin data is parsed and a Coin object is created, which
+     *            is then passed to the Data class for local storage and
+     *            firebase storage }
+     */
+    @SuppressWarnings("unchecked")
     private void processNewMapData(String json) throws JSONException {
         JSONObject mapData = new JSONObject(json);
         mExchangeRates     = mapData.getJSONObject("rates");
@@ -292,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < mCoinData.length(); i++) {
             // Extract json data
-            JSONObject coinJson       = mCoinData.getJSONObject(i);
+            final JSONObject coinJson       = mCoinData.getJSONObject(i);
             JSONObject coinProperties = coinJson.getJSONObject("properties");
             JSONArray  coords         = coinJson.getJSONObject("geometry").getJSONArray("coordinates");
 
@@ -312,12 +355,23 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Coin successfully added with ID: " + id);
+                    if ((int) object == mCoinData.length()) {
+                        Log.d("MAIN", "All coins successfully processed");
+                    }
                 }
                 @Override
                 public void onFailure(Exception e) {
+                    // If data fails to upload to firebase, then prompt the user to check their internet connection
+                    // and restart the application. We also reset the "lastSavedDate" so the application can restart
+                    // the data retrieval process (otherwise it would try to retrieve existing data that wasn't
+                    // correct)
                     Log.d("MAIN", "Failed to add coin with exception ", e);
+                    Toast.makeText(MainActivity.this, R.string.msgCoinAddFailure, Toast.LENGTH_SHORT).show();
+                    // TODO: Reset date in firebase
                 }
             });
         }
+        // Update the map after the coins have been locally added to the Data class
+        MapFragment.updateMapData();
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,11 @@ import android.view.ViewGroup;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class MapFragment extends Fragment {
+
+    private static ArrayList<Coin> mUncollectedCoins;
 
     public MapFragment() {
         // Required empty public constructor
@@ -27,6 +32,7 @@ public class MapFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mUncollectedCoins = Data.getUncollectedCoins();
     }
 
     @Override
@@ -36,8 +42,8 @@ public class MapFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
-    public static void setMapData(JSONArray coinData) {
-        updateMapView(coinData);
+    public static void updateMapData() {
+        mUncollectedCoins = Data.getUncollectedCoins();
     }
 
     private static void updateMapView(JSONArray coinData) {

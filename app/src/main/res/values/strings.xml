@@ -40,5 +40,6 @@
     <string name="registration_fail">Registration failed</string>
     <string name="reset_email">Enter your registered email address</string>
     <string name="user_null_pointer">User not logged in</string>
+    <string name="msgCoinAddFailure">Failed to process data, please check your internet connection and restart the application</string>
 
 </resources>

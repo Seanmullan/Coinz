@@ -1,5 +1,7 @@
 package mullan.sean.coinz;
 
+import java.util.HashMap;
+
 public class Coin {
 
     private String   id;
@@ -42,9 +44,7 @@ public class Coin {
         this.currency = currency;
     }
 
-    public String getSymbol() {
-        return symbol;
-    }
+    public String getSymbol() { return symbol; }
 
     public void setSymbol(String symbol) {
         this.symbol = symbol;
@@ -64,5 +64,16 @@ public class Coin {
 
     public void setLocation(Location location) {
         this.location = location;
+    }
+
+    public HashMap<String,Object> getCoinMap() {
+        HashMap<String,Object> coinData = new HashMap<>();
+        coinData.put("value", this.value);
+        coinData.put("currency", this.currency);
+        coinData.put("symbol", this.symbol);
+        coinData.put("colour", this.colour);
+        coinData.put("longitude", this.location.getLongitude());
+        coinData.put("latitude", this.location.getLatitude());
+        return coinData;
     }
 }
