@@ -26,6 +26,8 @@ import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    private static final String TAG = "C_REG";
+
     private FirebaseFirestore   mFirestore;
     private FirebaseAuth        mAuth;
     private ProgressBar         mProgressBar;
@@ -156,13 +158,13 @@ public class RegisterActivity extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Log.w("REG", "Document successfully added");
+                            Log.d(TAG, "Document successfully added");
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.w("REG", "Error adding document", e);
+                            Log.d(TAG, "Error adding document", e);
                         }
                     });
         } else {

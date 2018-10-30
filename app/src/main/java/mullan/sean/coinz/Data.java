@@ -10,6 +10,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ public final class Data {
     /*
      *  This class serves as a global data structure available to all classes
      */
+
+    private final static String TAG = "C_DATA";
 
     private static DocumentReference mUserDocRef;
     private static ArrayList<Coin>   mUncollectedCoins;
@@ -49,29 +52,26 @@ public final class Data {
 
     public static void retrieveAllCoinsFromCollection(final String collection, final OnEventListener<String> event) {
         mUserDocRef.collection(collection).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if(task.isSuccessful() && task.getResult() != null) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                switch (collection) {
-                                    case "uncollected":
-                                        mUncollectedCoins.add(documentToCoin(document));
-                                        break;
-                                    case "collected":
-                                        mCollectedCoins.add(documentToCoin(document));
-                                        break;
-                                    case "received":
-                                        mReceivedCoins.add(documentToCoin(document));
-                                        break;
-                                    default:
-                                        Log.d("FBDATA", "Invalid collection argument");
-                                }
+                .addOnCompleteListener(task -> {
+                    if(task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            switch (collection) {
+                                case "uncollected":
+                                    mUncollectedCoins.add(documentToCoin(document));
+                                    break;
+                                case "collected":
+                                    mCollectedCoins.add(documentToCoin(document));
+                                    break;
+                                case "received":
+                                    mReceivedCoins.add(documentToCoin(document));
+                                    break;
+                                default:
+                                    Log.d(TAG, "Invalid collection argument");
                             }
-                            event.onSuccess("Success");
-                        } else {
-                            event.onFailure(task.getException());
                         }
+                        event.onSuccess("Success");
+                    } else {
+                        event.onFailure(task.getException());
                     }
                 });
     }
@@ -93,7 +93,7 @@ public final class Data {
                 mReceivedCoins.add(coin);
                 break;
             default:
-                Log.d("FBDATA", "Invalid collection argument");
+                Log.d(TAG, "Invalid collection argument");
         }
         // Upload coin to specified collection on firebase
         String coinId = coin.getId();
@@ -129,9 +129,9 @@ public final class Data {
         String currency   = (String) coinData.get("currency");
         String symbol     = (String) coinData.get("symbol");
         String colour     = (String) coinData.get("colour");
-        double longitude  = (double) coinData.get("longitude");
         double latitude   = (double) coinData.get("latitude");
-        Location location = new Location(longitude, latitude);
+        double longitude  = (double) coinData.get("longitude");
+        LatLng location   = new LatLng(latitude, longitude);
         return new Coin(id, value, currency, symbol, colour, location);
     }
 
@@ -140,12 +140,12 @@ public final class Data {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
-                    Log.d("FBDATA", "Date successfully updated");
+                    Log.d(TAG, "Date successfully updated");
                 }
                 }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.d("FBDATA", "Date failed to update with exception ", e);
+                    Log.d(TAG, "Date failed to update with exception ", e);
                 }
         });
     }

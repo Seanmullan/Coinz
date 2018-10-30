@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -29,16 +30,17 @@ import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG         = "C_MAIN";
+    private static final String UNCOLLECTED = "uncollected";
+    private static final String COLLECTED   = "collected";
+    private static final String RECEIVED    = "received";
+
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseFirestore mFirestore;
     private DocumentSnapshot  mUserDoc;
     private FirebaseAuth      mAuth;
     private JSONObject        mExchangeRates;
     private JSONArray         mCoinData;
-
-    private static final String UNCOLLECTED = "uncollected";
-    private static final String COLLECTED   = "collected";
-    private static final String RECEIVED    = "received";
 
     /*
      *  @brief  { Set main activity view, load in map fragment as default
@@ -210,10 +212,10 @@ public class MainActivity extends AppCompatActivity {
                         mUserDoc = document;
                         populateData();
                     } else {
-                        Log.d("MAIN", "Failed to retrieve user document with ID " + uid);
+                        Log.d(TAG, "Failed to retrieve user document with ID " + uid);
                     }
                 } else {
-                    Log.d("MAIN", "User document get failed with ", task.getException());
+                    Log.d(TAG, "User document get failed with ", task.getException());
                 }
             }
         });
@@ -244,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
         String currentDate   = getCurrentDate();
 
         if (lastSavedDate == null || currentDate == null) {
-            Log.d("MAIN", "Saved date or current date is null");
+            Log.d(TAG, "Saved date or current date is null");
             return;
         }
 
@@ -254,34 +256,34 @@ public class MainActivity extends AppCompatActivity {
             Data.retrieveAllCoinsFromCollection(UNCOLLECTED, new OnEventListener<String>() {
                 @Override
                 public void onSuccess(String object) {
-                    Log.d("MAIN", "Successfully retrieved uncollected coins");
-                    MapFragment.updateMapData();
+                    Log.d(TAG, "Successfully retrieved uncollected coins");
+                    MapFragment.updateMapData(getApplicationContext());
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Failed to retrieve uncollected coins with exception ", e);
+                    Log.d(TAG, "Failed to retrieve uncollected coins with exception ", e);
                 }
             });
             // Retrieve all collected coins
             Data.retrieveAllCoinsFromCollection(COLLECTED, new OnEventListener<String>() {
                 @Override
                 public void onSuccess(String object) {
-                    Log.d("MAIN", "Successfully retrieved collected coins");
+                    Log.d(TAG, "Successfully retrieved collected coins");
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Failed to retrieve collected coins with exception ", e);
+                    Log.d(TAG, "Failed to retrieve collected coins with exception ", e);
                 }
             });
             //Retrieve all received coins
             Data.retrieveAllCoinsFromCollection(RECEIVED, new OnEventListener<String>() {
                 @Override
                 public void onSuccess(String object) {
-                    Log.d("MAIN", "Successfully retrieved received coins");
+                    Log.d(TAG, "Successfully retrieved received coins");
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Failed to retrieve received coins with exception ", e);
+                    Log.d(TAG, "Failed to retrieve received coins with exception ", e);
                 }
             });
 
@@ -291,31 +293,31 @@ public class MainActivity extends AppCompatActivity {
             Data.clearAllCoinsFromCollection(UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
-                    Log.d("MAIN", "Successfully cleared uncollected coins");
+                    Log.d(TAG, "Successfully cleared uncollected coins");
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Could not clear uncollected coins with exception: ", e);
+                    Log.d(TAG, "Could not clear uncollected coins with exception: ", e);
                 }
             });
             Data.clearAllCoinsFromCollection(COLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
-                    Log.d("MAIN", "Successfully cleared collected coins");
+                    Log.d(TAG, "Successfully cleared collected coins");
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Could not clear collected coins with exception: ", e);
+                    Log.d(TAG, "Could not clear collected coins with exception: ", e);
                 }
             });
             Data.clearAllCoinsFromCollection(RECEIVED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
-                    Log.d("MAIN", "Successfully cleared received coins");
+                    Log.d(TAG, "Successfully cleared received coins");
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Could not clear received coins with exception: ", e);
+                    Log.d(TAG, "Could not clear received coins with exception: ", e);
                 }
             });
             retrieveNewMapData();
@@ -331,19 +333,19 @@ public class MainActivity extends AppCompatActivity {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
         String url = mapUrl + getCurrentDate() + mapJson;
-        DownloadFileTask downloadTask = new DownloadFileTask(getApplicationContext(), new OnEventListener<String>() {
+        DownloadFileTask downloadTask = new DownloadFileTask(new OnEventListener<String>() {
             @Override
             public void onSuccess(String result) {
                 try {
-                    Log.d("MAIN", "Successfully retrieved map data from Informatics server");
+                    Log.d(TAG, "Successfully retrieved map data from Informatics server");
                     processNewMapData(result);
                 } catch (JSONException e) {
-                    Log.d("MAIN", "Failed to parse json data" + e.toString());
+                    Log.d(TAG, "Failed to parse json data" + e.toString());
                 }
             }
             @Override
             public void onFailure(Exception e) {
-                Log.d("MAIN", "Download task failed: " + e.toString());
+                Log.d(TAG, "Download task failed: " + e.toString());
             }
         });
         downloadTask.execute(url);
@@ -382,18 +384,16 @@ public class MainActivity extends AppCompatActivity {
             String currency = coinProperties.getString("currency");
             String symbol   = coinProperties.getString("marker-symbol");
             String colour   = coinProperties.getString("marker-color");
-
-            // Create location object from coin coordinates
-            Location location = new Location(coords.getDouble(0), coords.getDouble(1));
+            LatLng location = new LatLng(coords.getDouble(1), coords.getDouble(0));
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, symbol, colour, location);
             Data.addCoinToCollection(coin, UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
-                    Log.d("MAIN", "Coin successfully added with ID: " + id);
+                    Log.d(TAG, "Coin successfully added with ID: " + id);
                     if ((int) object == mCoinData.length()) {
-                        Log.d("MAIN", "All coins successfully processed");
+                        Log.d(TAG, "All coins successfully processed");
                     }
                 }
                 @Override
@@ -402,13 +402,13 @@ public class MainActivity extends AppCompatActivity {
                     // and restart the application. We also reset the "lastSavedDate" so the application can restart
                     // the data retrieval process (otherwise it would try to retrieve existing data that wasn't
                     // correct)
-                    Log.d("MAIN", "Failed to add coin with exception ", e);
+                    Log.d(TAG, "Failed to add coin with exception ", e);
                     Toast.makeText(MainActivity.this, R.string.msgCoinAddFailure, Toast.LENGTH_SHORT).show();
                     Data.updateDate("");
                 }
             });
         }
         // Update the map after the coins have been locally added to the Data class
-        MapFragment.updateMapData();
+        MapFragment.updateMapData(getApplicationContext());
     }
 }

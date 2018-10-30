@@ -1,22 +1,24 @@
 package mullan.sean.coinz;
 
+import com.mapbox.mapboxsdk.geometry.LatLng;
+
 import java.util.HashMap;
 
 public class Coin {
 
-    private String   id;
-    private double   value;
-    private String   currency;
-    private String   symbol;
-    private String   colour;
-    private Location location;
+    private String id;
+    private double value;
+    private String currency;
+    private String symbol;
+    private String colour;
+    private LatLng location;
 
-    public Coin(String id, double value, String currency, String symbol, String colour, Location location) {
-        this.id = id;
-        this.value = value;
+    public Coin(String id, double value, String currency, String symbol, String colour, LatLng location) {
+        this.id       = id;
+        this.value    = value;
         this.currency = currency;
-        this.symbol = symbol;
-        this.colour = colour;
+        this.symbol   = symbol;
+        this.colour   = colour;
         this.location = location;
     }
 
@@ -58,11 +60,11 @@ public class Coin {
         this.colour = colour;
     }
 
-    public Location getLocation() {
+    public LatLng getLocation() {
         return location;
     }
 
-    public void setLocation(Location location) {
+    public void setLocation(LatLng location) {
         this.location = location;
     }
 

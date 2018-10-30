@@ -1,6 +1,5 @@
 package mullan.sean.coinz;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
@@ -14,13 +13,11 @@ import java.net.URL;
 public class DownloadFileTask extends AsyncTask<String, Void, String> {
 
     private OnEventListener<String> mCallBack;
-    private Context mContext;
     public Exception mException;
 
 
-    public DownloadFileTask(Context context, OnEventListener callback) {
+    public DownloadFileTask(OnEventListener<String> callback) {
         mCallBack = callback;
-        mContext = context;
     }
 
     @Override
