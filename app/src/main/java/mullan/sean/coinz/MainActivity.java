@@ -2,7 +2,6 @@ package mullan.sean.coinz;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -13,8 +12,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -75,15 +72,12 @@ public class MainActivity extends AppCompatActivity {
         loadFragment(new MapFragment());
 
         // Create firebase authentication listener
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user == null) {
-                    // user auth state is changed - user is null
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                    finish();
-                }
+        mAuthListener = firebaseAuth -> {
+            FirebaseUser user1 = firebaseAuth.getCurrentUser();
+            if (user1 == null) {
+                // user auth state is changed - user is null
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                finish();
             }
         };
     }
@@ -94,36 +88,32 @@ public class MainActivity extends AppCompatActivity {
      *            fragment is loaded }
      */
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            Fragment fragment;
-            switch (item.getItemId()) {
-                case R.id.navigation_map:
-                    fragment = new MapFragment();
-                    loadFragment(fragment);
-                    return true;
-                case R.id.navigation_friends:
-                    fragment = new FriendsFragment();
-                    loadFragment(fragment);
-                    return true;
-                case R.id.navigation_bank:
-                    fragment = new BankFragment();
-                    loadFragment(fragment);
-                    return true;
-                case R.id.navigation_wallet:
-                    fragment = new WalletFragment();
-                    loadFragment(fragment);
-                    return true;
-                case R.id.navigation_leaderboard:
-                    fragment = new LeaderBoardFragment();
-                    loadFragment(fragment);
-                    return true;
-            }
-            return false;
-        }
-    };
+            = item -> {
+                Fragment fragment;
+                switch (item.getItemId()) {
+                    case R.id.navigation_map:
+                        fragment = new MapFragment();
+                        loadFragment(fragment);
+                        return true;
+                    case R.id.navigation_friends:
+                        fragment = new FriendsFragment();
+                        loadFragment(fragment);
+                        return true;
+                    case R.id.navigation_bank:
+                        fragment = new BankFragment();
+                        loadFragment(fragment);
+                        return true;
+                    case R.id.navigation_wallet:
+                        fragment = new WalletFragment();
+                        loadFragment(fragment);
+                        return true;
+                    case R.id.navigation_leaderboard:
+                        fragment = new LeaderBoardFragment();
+                        loadFragment(fragment);
+                        return true;
+                }
+                return false;
+            };
 
     /*
      *  @brief { Load the appropriate fragment into the container }
@@ -202,21 +192,18 @@ public class MainActivity extends AppCompatActivity {
     private void getUserDocument(final String uid) {
         DocumentReference docRef = mFirestore.collection("users").document(uid);
         Data.init(docRef);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document != null) {
-                        // Initialise user document reference and retrieve map data
-                        mUserDoc = document;
-                        populateData();
-                    } else {
-                        Log.d(TAG, "Failed to retrieve user document with ID " + uid);
-                    }
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document != null) {
+                    // Initialise user document reference and retrieve map data
+                    mUserDoc = document;
+                    populateData();
                 } else {
-                    Log.d(TAG, "User document get failed with ", task.getException());
+                    Log.d(TAG, "Failed to retrieve user document with ID " + uid);
                 }
+            } else {
+                Log.d(TAG, "User document get failed with ", task.getException());
             }
         });
     }
@@ -376,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
             // Extract json data
             final JSONObject coinJson = mCoinData.getJSONObject(i);
             JSONObject coinProperties = coinJson.getJSONObject("properties");
-            JSONArray  coords         = coinJson.getJSONObject("geometry").getJSONArray("coordinates");
+            JSONArray  coords = coinJson.getJSONObject("geometry").getJSONArray("coordinates");
 
             // Parse json data into coin attributes
             final String id = coinProperties.getString("id");
@@ -396,14 +383,18 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "All coins successfully processed");
                     }
                 }
+                /*
+                 * If data fails to upload to firebase, then prompt the user to check their internet
+                 * connection and restart the application. We also reset the "lastSavedDate" so the
+                 * application can restart the data retrieval process (otherwise it would try to
+                 * retrieve existing data that wasn't correct
+                 */
                 @Override
                 public void onFailure(Exception e) {
-                    // If data fails to upload to firebase, then prompt the user to check their internet connection
-                    // and restart the application. We also reset the "lastSavedDate" so the application can restart
-                    // the data retrieval process (otherwise it would try to retrieve existing data that wasn't
-                    // correct)
                     Log.d(TAG, "Failed to add coin with exception ", e);
-                    Toast.makeText(MainActivity.this, R.string.msgCoinAddFailure, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this,
+                            R.string.msgCoinAddFailure,
+                            Toast.LENGTH_SHORT).show();
                     Data.updateDate("");
                 }
             });

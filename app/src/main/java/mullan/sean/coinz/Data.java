@@ -1,15 +1,9 @@
 package mullan.sean.coinz;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.util.ArrayList;
@@ -19,10 +13,14 @@ import java.util.Map;
 public final class Data {
 
     /*
-     *  This class serves as a global data structure available to all classes
+     *  This class serves as a global data structure that uploads and downloads from
+     *  the firebase database
      */
 
-    private final static String TAG = "C_DATA";
+    private static final String TAG         = "C_DATA";
+    private static final String UNCOLLECTED = "uncollected";
+    private static final String COLLECTED   = "collected";
+    private static final String RECEIVED    = "received";
 
     private static DocumentReference mUserDocRef;
     private static ArrayList<Coin>   mUncollectedCoins;
@@ -30,6 +28,10 @@ public final class Data {
     private static ArrayList<Coin>   mReceivedCoins;
     private static int               mUncollectedCoinCount;
 
+    /*
+     *  @brief  { Initialise the document reference that will be used to identify
+     *            the users document within firebase, and initialise local variables }
+     */
     public static void init(DocumentReference docRef) {
         Data.mUserDocRef      = docRef;
         mUncollectedCoins     = new ArrayList<>();
@@ -38,31 +40,44 @@ public final class Data {
         mUncollectedCoinCount = 0;
     }
 
+    /*
+     *  @return  { ArrayList of uncollected coins }
+     */
     public static ArrayList<Coin> getUncollectedCoins() {
         return mUncollectedCoins;
     }
 
-    public static ArrayList<Coin> getCollectedCoins() {
-        return mCollectedCoins;
-    }
+    /*
+     *  @return  { ArrayList of collected coins }
+     */
+    public static ArrayList<Coin> getCollectedCoins() { return mCollectedCoins; }
 
-    public static ArrayList<Coin> getmReceivedCoins() {
-        return mReceivedCoins;
-    }
+    /*
+     *  @return  { ArrayList of received coins }
+     */
+    public static ArrayList<Coin> getReceivedCoins() { return mReceivedCoins; }
 
-    public static void retrieveAllCoinsFromCollection(final String collection, final OnEventListener<String> event) {
+
+    /*
+     *  @brief  { This procedure fetches all documents within the specified collection
+     *            argument. It identifies the collection and stores the retrieved coins
+     *            in their respective ArrayLists. The caller is notified if the procedure
+     *            was a success or failure }
+     */
+    public static void retrieveAllCoinsFromCollection(final String collection,
+                                                      final OnEventListener<String> event) {
         mUserDocRef.collection(collection).get()
                 .addOnCompleteListener(task -> {
                     if(task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             switch (collection) {
-                                case "uncollected":
+                                case UNCOLLECTED:
                                     mUncollectedCoins.add(documentToCoin(document));
                                     break;
-                                case "collected":
+                                case COLLECTED:
                                     mCollectedCoins.add(documentToCoin(document));
                                     break;
-                                case "received":
+                                case RECEIVED:
                                     mReceivedCoins.add(documentToCoin(document));
                                     break;
                                 default:
@@ -76,52 +91,70 @@ public final class Data {
                 });
     }
 
-    public static void clearAllCoinsFromCollection(final String collection, final OnEventListener<String> event) {
+    /*
+     *  @brief  { This procedure removes all documents within the specified collection
+     *            argument. The caller is notified if the procedure was a success or failure }
+     */
+    public static void clearAllCoinsFromCollection(final String collection,
+                                                   final OnEventListener<String> event) {
         // TODO: Clear all documents in specified collection
     }
 
-    public static void addCoinToCollection(final Coin coin, final String collection, final OnEventListener<Integer> event) {
+    /*
+     *  @brief  { The specified coin is added to the specified collection and corresponding
+     *            ArrayList. If the specified collection is "uncollected", then the method
+     *            informs the caller of the number of uncollected coins it has currently
+     *            added. This is so the caller can identify when all of it's uncollected
+     *            coins have successfully been added to firebase. The method also informs
+     *            the caller if the document fails to upload }
+     */
+    public static void addCoinToCollection(final Coin coin,
+                                           final String collection,
+                                           final OnEventListener<Integer> event) {
         // Add coin to appropriate ArrayList
         switch (collection) {
-            case "uncollected":
+            case UNCOLLECTED:
                 mUncollectedCoins.add(coin);
                 break;
-            case "collected":
+            case COLLECTED:
                 mCollectedCoins.add(coin);
                 break;
-            case "received":
+            case RECEIVED:
                 mReceivedCoins.add(coin);
                 break;
             default:
                 Log.d(TAG, "Invalid collection argument");
         }
+
         // Upload coin to specified collection on firebase
         String coinId = coin.getId();
         HashMap<String,Object> coinData = coin.getCoinMap();
         mUserDocRef.collection(collection).document(coinId).set(coinData)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // If we are uploading uncollected coins, then return the count of
-                        // the number of uncollected coins that have been uploaded so far
-                        if (collection == "uncollected") {
-                            event.onSuccess(++mUncollectedCoinCount);
-                        } else {
-                            event.onSuccess(1);
-                        }
+                .addOnSuccessListener(aVoid -> {
+                    if (collection == UNCOLLECTED) {
+                        event.onSuccess(++mUncollectedCoinCount);
+                    } else {
+                        event.onSuccess(1);
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                event.onFailure(e);
-            }
-        });
+                }).addOnFailureListener(event::onFailure);
     }
 
-    public static void removeCoinFromCollection(Coin coin, final String collection, OnEventListener event) {
+    /*
+     *  @brief  { Removes the document corresponding to the coin argument in the specified
+     *            collection, and the coin is also removed from the corresponding ArrayList.
+     *            The caller is notified if the procedure was a success or failure }
+     */
+    public static void removeCoinFromCollection(Coin coin,
+                                                final String collection,
+                                                OnEventListener event) {
         // TODO: Remove coin fromm specified collection
     }
 
+    /*
+     *  @brief  { Creates a coin object from the document data }
+     *
+     *  @return { Coin object }
+     */
     private static Coin documentToCoin(QueryDocumentSnapshot doc) {
         Map<String, Object> coinData = doc.getData();
         String id         = doc.getId();
@@ -135,18 +168,12 @@ public final class Data {
         return new Coin(id, value, currency, symbol, colour, location);
     }
 
+    /*
+     *  @brief  { Updates the "lastSavedDate" field on firebase }
+     */
     public static void updateDate(String date) {
         mUserDocRef.update("lastSavedDate", date)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Log.d(TAG, "Date successfully updated");
-                }
-                }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.d(TAG, "Date failed to update with exception ", e);
-                }
-        });
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Date successfully updated"))
+                .addOnFailureListener(e -> Log.d(TAG, "Date failed to update with exception ", e));
     }
 }

@@ -2,9 +2,7 @@ package mullan.sean.coinz;
 
 import android.content.Context;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcel;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,10 +28,11 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode;
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode;
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.annotation.Nonnull;
 
 public class MapFragment extends Fragment implements
         OnMapReadyCallback, LocationEngineListener, PermissionsListener  {
@@ -45,31 +44,36 @@ public class MapFragment extends Fragment implements
     private static final String QUID = "QUID";
 
     private static ArrayList<Coin> mUncollectedCoins;
-    private PermissionsManager     permissionsManager;
-    private MapView                mapView;
     private static MapboxMap       map;
+    private MapView                mapView;
     private LocationEngine         locationEngine;
-    private LocationLayerPlugin    locationLayerPlugin;
     private Location               originLocation;
-    private static String          geoJsonSource;
-    private IconFactory            iconFactory;
 
-    public MapFragment() {
-        // Required empty public constructor
-    }
+    /*
+     *  @brief  { Required empty public constructor }
+     */
+    public MapFragment(){}
 
+    /*
+     *  @brief  { Invoke onCreate of superclass }
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
+    /*
+     *  @brief  { Inflates the view for Mapbox, and fetches the uncollected coin data
+     *            from the Data class }
+     */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
+        // Fetch uncollected coins from Data class
         updateMapData(inflater.getContext());
 
         // Get Mapbox instance
@@ -80,25 +84,36 @@ public class MapFragment extends Fragment implements
         return view;
     }
 
+    /*
+     *  @brief  { Fetches uncollected coins from the Data class, then updates the
+     *            coin markers on the map }
+     */
     public static void updateMapData(Context context) {
         Log.d(TAG, "[updateMapData] fetching uncollected coins");
         mUncollectedCoins = Data.getUncollectedCoins();
         updateMarkers(context);
     }
 
+    /*
+     *  @brief  { Implements callback for Mapbox. If map is not null, initialise map
+     *            variable and enable the devices location }
+     */
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
         if (mapboxMap == null) {
             Log.d(TAG, "[onMapReady] mapBox is null");
         } else {
             map = mapboxMap;
-            // Set user interface options
             map.getUiSettings().setCompassEnabled(true);
             map.getUiSettings().setZoomControlsEnabled(true);
             enableLocation();
         }
     }
 
+    /*
+     *  @brief  { Implements callback for permissions listener. If permissions have been
+     *            granted, enable devices location, otherwise prompt user to grant permission }
+     */
     @Override
     public void onPermissionResult(boolean granted) {
         Log.d(TAG, "[onPermissionResult] granted == " + granted);
@@ -109,6 +124,10 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    /*
+     *  @brief { Implements callback function for permissions listener. Lists permissions
+     *           that user is required to grant for the application }
+     */
     @Override
     public void onExplanationNeeded(List<String> permissionsToExplain) {
         String permissions = permissionsToExplain.toString();
@@ -117,6 +136,11 @@ public class MapFragment extends Fragment implements
         displayToast(msg);
     }
 
+    /*
+     *  @brief  { If permissions have been granted, invoke the initialisation methods for
+     *            the location engine and location layer. Otherwise, prompt permissions
+     *            manager to request permissions }
+     */
     private void enableLocation() {
         if (PermissionsManager.areLocationPermissionsGranted(getLayoutInflater().getContext())) {
             Log.d(TAG, "Permissions are granted");
@@ -124,11 +148,14 @@ public class MapFragment extends Fragment implements
             initializeLocationLayer();
         } else {
             Log.d(TAG, "Permissions are not granted");
-            permissionsManager = new PermissionsManager(this);
+            PermissionsManager permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(getActivity());
         }
     }
 
+    /*
+     *  @brief  { Initialise location layer if MapView and MapboxMap are not null }
+     */
     private void initializeLocationLayer() {
         if (mapView == null) {
             Log.d(TAG, "mapView is null");
@@ -136,8 +163,8 @@ public class MapFragment extends Fragment implements
             if (map == null) {
                 Log.d(TAG, "map is null");
             } else {
-                locationLayerPlugin = new LocationLayerPlugin(mapView,
-                        map, locationEngine);
+                LocationLayerPlugin locationLayerPlugin
+                        = new LocationLayerPlugin(mapView, map, locationEngine);
                 locationLayerPlugin.setLocationLayerEnabled(true);
                 locationLayerPlugin.setCameraMode(CameraMode.TRACKING);
                 locationLayerPlugin.setRenderMode(RenderMode.NORMAL);
@@ -145,6 +172,10 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    /*
+     *  @brief  { Initialises the location engine to update the location every 5 seconds,
+     *            with the fastest updates to be at most 1 second }
+     */
     private void initializeLocationEngine() {
         locationEngine = new LocationEngineProvider(getLayoutInflater().getContext())
                 .obtainBestLocationEngineAvailable();
@@ -161,13 +192,20 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    /*
+     *  @brief  { Implements callback function for location engine listener }
+     */
     @Override
-    @SuppressWarnings("MissingPermission")
     public void onConnected() {
         Log.d(TAG, "[onConnected] requesting location updates");
         locationEngine.requestLocationUpdates();
     }
 
+    /*
+     *  @brief  { When location has changed, location engine listener calls
+     *            this method. If the location is not null, then update the
+     *            location variable and adjust the camera position }
+     */
     @Override
     public void onLocationChanged(Location location) {
         if (location == null) {
@@ -179,45 +217,19 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    /*
+     *  @brief  { Sets camera position according to lat and long coordinates }
+     */
     private void setCameraPosition(Location location) {
         LatLng latLng = new LatLng(location.getLatitude(),
                 location.getLongitude());
         map.animateCamera(CameraUpdateFactory.newLatLng(latLng));
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        mapView.onStart();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mapView.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mapView.onPause();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mapView.onDestroy();
-    }
-
     /*
-     *  @brief  { Display message on device }
-     *
-     *  @params { Message to be displayed }
+     *  @brief  { Populates the map with markers that represent coins. Each
+     *            coin is represented by its corresponding coin image }
      */
-    private void displayToast(String message) {
-        Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
-    }
-
     private static void updateMarkers(Context context) {
         IconFactory iconFactory = IconFactory.getInstance(context);
         Icon icon;
@@ -244,5 +256,38 @@ public class MapFragment extends Fragment implements
                     .icon(icon);
             map.addMarker(marker);
         }
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
     }
 }
