@@ -3,6 +3,7 @@
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login and register-->
+    <string name="access_token">pk.eyJ1Ijoic2Vhbm11bGxhbiIsImEiOiJjam52czByYzMwZ21yM2tvYjlhaTVzZ2tlIn0.kIydMAAEwfMV1ORU7bP1aA</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
     <string name="prompt_username">Username</string>
