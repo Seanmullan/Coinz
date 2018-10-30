@@ -36,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
     private JSONObject        mExchangeRates;
     private JSONArray         mCoinData;
 
+    private static final String UNCOLLECTED = "uncollected";
+    private static final String COLLECTED   = "collected";
+    private static final String RECEIVED    = "received";
+
     /*
      *  @brief  { Set main activity view, load in map fragment as default
      *            and create a listener for the user authentication state }
@@ -246,22 +250,45 @@ public class MainActivity extends AppCompatActivity {
 
         // If a new day has not yet begun, invoke the Data class to retrieve existing data
         if (lastSavedDate.equals(currentDate)) {
-            Data.retrieveExistingData(new OnEventListener() {
+            // Retrieve all uncollected coins, then prompt Map to update its data
+            Data.retrieveAllCoinsFromCollection(UNCOLLECTED, new OnEventListener<String>() {
                 @Override
-                public void onSuccess(Object object) {
-                    Log.d("MAIN", "Successfully populated data");
+                public void onSuccess(String object) {
+                    Log.d("MAIN", "Successfully retrieved uncollected coins");
                     MapFragment.updateMapData();
                 }
                 @Override
                 public void onFailure(Exception e) {
-                    Log.d("MAIN", "Data population failed");
+                    Log.d("MAIN", "Failed to retrieve uncollected coins with exception ", e);
+                }
+            });
+            // Retrieve all collected coins
+            Data.retrieveAllCoinsFromCollection(COLLECTED, new OnEventListener<String>() {
+                @Override
+                public void onSuccess(String object) {
+                    Log.d("MAIN", "Successfully retrieved collected coins");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Failed to retrieve collected coins with exception ", e);
+                }
+            });
+            //Retrieve all received coins
+            Data.retrieveAllCoinsFromCollection(RECEIVED, new OnEventListener<String>() {
+                @Override
+                public void onSuccess(String object) {
+                    Log.d("MAIN", "Successfully retrieved received coins");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Failed to retrieve received coins with exception ", e);
                 }
             });
 
         // If a new day has begun, clear the data from the previous day and fetch the new data
         } else {
-            // TODO: Update date with current date on firebase
-            Data.clearUncollectedCoins(this.getApplicationContext(), new OnEventListener() {
+            Data.updateDate(getCurrentDate());
+            Data.clearAllCoinsFromCollection(UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Successfully cleared uncollected coins");
@@ -271,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("MAIN", "Could not clear uncollected coins with exception: ", e);
                 }
             });
-            Data.clearCollectedCoins(new OnEventListener() {
+            Data.clearAllCoinsFromCollection(COLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Successfully cleared collected coins");
@@ -279,6 +306,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(Exception e) {
                     Log.d("MAIN", "Could not clear collected coins with exception: ", e);
+                }
+            });
+            Data.clearAllCoinsFromCollection(RECEIVED, new OnEventListener() {
+                @Override
+                public void onSuccess(Object object) {
+                    Log.d("MAIN", "Successfully cleared received coins");
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d("MAIN", "Could not clear received coins with exception: ", e);
                 }
             });
             retrieveNewMapData();
@@ -335,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < mCoinData.length(); i++) {
             // Extract json data
-            final JSONObject coinJson       = mCoinData.getJSONObject(i);
+            final JSONObject coinJson = mCoinData.getJSONObject(i);
             JSONObject coinProperties = coinJson.getJSONObject("properties");
             JSONArray  coords         = coinJson.getJSONObject("geometry").getJSONArray("coordinates");
 
@@ -351,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, symbol, colour, location);
-            Data.addUncollectedCoin(coin, new OnEventListener() {
+            Data.addCoinToCollection(coin, UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d("MAIN", "Coin successfully added with ID: " + id);
@@ -367,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
                     // correct)
                     Log.d("MAIN", "Failed to add coin with exception ", e);
                     Toast.makeText(MainActivity.this, R.string.msgCoinAddFailure, Toast.LENGTH_SHORT).show();
-                    // TODO: Reset date in firebase
+                    Data.updateDate("");
                 }
             });
         }

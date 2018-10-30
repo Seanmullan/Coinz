@@ -1,6 +1,5 @@
 package mullan.sean.coinz;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -26,64 +25,101 @@ public final class Data {
     private static ArrayList<Coin>   mUncollectedCoins;
     private static ArrayList<Coin>   mCollectedCoins;
     private static ArrayList<Coin>   mReceivedCoins;
-    private static int               mCount;
+    private static int               mUncollectedCoinCount;
 
     public static void init(DocumentReference docRef) {
-        Data.mUserDocRef   = docRef;
-        mUncollectedCoins  = new ArrayList<>();
-        mCollectedCoins    = new ArrayList<>();
-        mReceivedCoins     = new ArrayList<>();
-        mCount             = 0;
+        Data.mUserDocRef      = docRef;
+        mUncollectedCoins     = new ArrayList<>();
+        mCollectedCoins       = new ArrayList<>();
+        mReceivedCoins        = new ArrayList<>();
+        mUncollectedCoinCount = 0;
     }
 
-    public static void retrieveExistingData(final OnEventListener<String> event) {
-        // Retrieve uncollected coins
-        mUserDocRef.collection("uncollected").get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                mUncollectedCoins.add(documentToCoin(document));
-                            }
-                        } else {
-                            event.onFailure(task.getException());
-                        }
-                    }
-                });
+    public static ArrayList<Coin> getUncollectedCoins() {
+        return mUncollectedCoins;
+    }
 
-        // Retrieve collected coins
-        mUserDocRef.collection("collected").get()
+    public static ArrayList<Coin> getCollectedCoins() {
+        return mCollectedCoins;
+    }
+
+    public static ArrayList<Coin> getmReceivedCoins() {
+        return mReceivedCoins;
+    }
+
+    public static void retrieveAllCoinsFromCollection(final String collection, final OnEventListener<String> event) {
+        mUserDocRef.collection(collection).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if(task.isSuccessful() && task.getResult() != null) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                mCollectedCoins.add(documentToCoin(document));
+                                switch (collection) {
+                                    case "uncollected":
+                                        mUncollectedCoins.add(documentToCoin(document));
+                                        break;
+                                    case "collected":
+                                        mCollectedCoins.add(documentToCoin(document));
+                                        break;
+                                    case "received":
+                                        mReceivedCoins.add(documentToCoin(document));
+                                        break;
+                                    default:
+                                        Log.d("FBDATA", "Invalid collection argument");
+                                }
                             }
+                            event.onSuccess("Success");
                         } else {
                             event.onFailure(task.getException());
                         }
                     }
                 });
+    }
 
-        // Retrieve received coins
-        mUserDocRef.collection("received").get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+    public static void clearAllCoinsFromCollection(final String collection, final OnEventListener<String> event) {
+        // TODO: Clear all documents in specified collection
+    }
+
+    public static void addCoinToCollection(final Coin coin, final String collection, final OnEventListener<Integer> event) {
+        // Add coin to appropriate ArrayList
+        switch (collection) {
+            case "uncollected":
+                mUncollectedCoins.add(coin);
+                break;
+            case "collected":
+                mCollectedCoins.add(coin);
+                break;
+            case "received":
+                mReceivedCoins.add(coin);
+                break;
+            default:
+                Log.d("FBDATA", "Invalid collection argument");
+        }
+        // Upload coin to specified collection on firebase
+        String coinId = coin.getId();
+        HashMap<String,Object> coinData = coin.getCoinMap();
+        mUserDocRef.collection(collection).document(coinId).set(coinData)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if(task.isSuccessful() && task.getResult() != null) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                mReceivedCoins.add(documentToCoin(document));
-                            }
+                    public void onSuccess(Void aVoid) {
+                        // If we are uploading uncollected coins, then return the count of
+                        // the number of uncollected coins that have been uploaded so far
+                        if (collection == "uncollected") {
+                            event.onSuccess(++mUncollectedCoinCount);
                         } else {
-                            event.onFailure(task.getException());
+                            event.onSuccess(1);
                         }
                     }
-                });
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                event.onFailure(e);
+            }
+        });
+    }
 
-        // Let MainActivity know that all data has been retrieved
-        event.onSuccess("success");
+    public static void removeCoinFromCollection(Coin coin, final String collection, OnEventListener event) {
+        // TODO: Remove coin fromm specified collection
     }
 
     private static Coin documentToCoin(QueryDocumentSnapshot doc) {
@@ -99,50 +135,18 @@ public final class Data {
         return new Coin(id, value, currency, symbol, colour, location);
     }
 
-    public static ArrayList<Coin> getUncollectedCoins() {
-        return mUncollectedCoins;
-    }
-
-    public static void addUncollectedCoin(final Coin coin, final OnEventListener<Integer> event) {
-        mUncollectedCoins.add(coin);
-        String coinId = coin.getId();
-        HashMap<String,Object> coinData = coin.getCoinMap();
-        mUserDocRef.collection("uncollected").document(coinId).set(coinData)
+    public static void updateDate(String date) {
+        mUserDocRef.update("lastSavedDate", date)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
-                    event.onSuccess(++mCount);
+                    Log.d("FBDATA", "Date successfully updated");
                 }
                 }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    event.onFailure(e);
+                    Log.d("FBDATA", "Date failed to update with exception ", e);
                 }
         });
-    }
-
-    public static void removeUncollectedCoin(Coin coin, OnEventListener event) {
-        // TODO: Remove coin from uncollected subcollection and from mUncollectedCoins
-    }
-
-    public static void clearUncollectedCoins(Context con, final OnEventListener event) {
-
-    }
-
-    public static ArrayList<Coin> getCollectedCoins() {
-        return mCollectedCoins;
-    }
-
-    public static void addCollectedCoin(Coin coin, OnEventListener event) {
-        // TODO: Add coin to collected coins subcollection and update mCollectedCoins
-    }
-
-    public static void removeCollectedCoin(Coin coin, OnEventListener event) {
-        // TODO: Remove coin from uncollected subcollection and from mCollectedCoins
-    }
-
-    public static void clearCollectedCoins(OnEventListener event) {
-        // TODO: Retrieve all coins in subcollection and then delete them using ID's
-        event.onSuccess("success");
     }
 }

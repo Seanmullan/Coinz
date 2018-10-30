@@ -43,6 +43,7 @@ public class MapFragment extends Fragment {
     }
 
     public static void updateMapData() {
+        Log.d("MAP", "Fetching uncollected coins");
         mUncollectedCoins = Data.getUncollectedCoins();
     }
 
