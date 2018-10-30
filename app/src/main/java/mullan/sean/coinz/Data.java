@@ -1,7 +1,10 @@
 package mullan.sean.coinz;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -50,13 +53,16 @@ public final class Data {
     /*
      *  @return  { ArrayList of collected coins }
      */
-    public static ArrayList<Coin> getCollectedCoins() { return mCollectedCoins; }
+    public static ArrayList<Coin> getCollectedCoins() {
+        return mCollectedCoins;
+    }
 
     /*
      *  @return  { ArrayList of received coins }
      */
-    public static ArrayList<Coin> getReceivedCoins() { return mReceivedCoins; }
-
+    public static ArrayList<Coin> getReceivedCoins() {
+        return mReceivedCoins;
+    }
 
     /*
      *  @brief  { This procedure fetches all documents within the specified collection
@@ -146,8 +152,26 @@ public final class Data {
      */
     public static void removeCoinFromCollection(Coin coin,
                                                 final String collection,
-                                                OnEventListener event) {
-        // TODO: Remove coin fromm specified collection
+                                                OnEventListener<String> event) {
+        // Remove coin from appropriate ArrayList
+        switch (collection) {
+            case UNCOLLECTED:
+                mUncollectedCoins.remove(coin);
+                break;
+            case COLLECTED:
+                mCollectedCoins.remove(coin);
+                break;
+            case RECEIVED:
+                mReceivedCoins.remove(coin);
+                break;
+            default:
+                Log.d(TAG, "Invalid collection argument");
+        }
+
+        // Remove coin from specified collection
+        mUserDocRef.collection(collection).document(coin.getId()).delete()
+                .addOnSuccessListener(aVoid -> event.onSuccess("success"))
+                .addOnFailureListener(event::onFailure);
     }
 
     /*

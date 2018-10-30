@@ -19,6 +19,7 @@ import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -30,6 +31,7 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.modes.CameraMode;
 import com.mapbox.mapboxsdk.plugins.locationlayer.modes.RenderMode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -37,17 +39,20 @@ import javax.annotation.Nonnull;
 public class MapFragment extends Fragment implements
         OnMapReadyCallback, LocationEngineListener, PermissionsListener  {
 
+    private static final String UNCOLLECTED = "uncollected";
+    private static final String COLLECTED   = "collected";
     private static final String TAG  = "C_MAP";
     private static final String DOLR = "DOLR";
     private static final String PENY = "PENY";
     private static final String SHIL = "SHIL";
     private static final String QUID = "QUID";
 
-    private static ArrayList<Coin> mUncollectedCoins;
-    private static MapboxMap       map;
-    private MapView                mapView;
-    private LocationEngine         locationEngine;
-    private Location               originLocation;
+    private static HashMap<Coin,Marker> mMarkers;
+    private static ArrayList<Coin>      mUncollectedCoins;
+    private LatLng                      mCurrentLocation;
+    private static MapboxMap            map;
+    private MapView                     mapView;
+    private LocationEngine              locationEngine;
 
     /*
      *  @brief  { Required empty public constructor }
@@ -75,6 +80,9 @@ public class MapFragment extends Fragment implements
 
         // Fetch uncollected coins from Data class
         updateMapData(inflater.getContext());
+
+        // Initialise markers HashMap
+        mMarkers = new HashMap<>();
 
         // Get Mapbox instance
         Mapbox.getInstance(inflater.getContext(), getString(R.string.access_token));
@@ -185,7 +193,7 @@ public class MapFragment extends Fragment implements
         locationEngine.activate();
         Location lastLocation = locationEngine.getLastLocation();
         if (lastLocation != null) {
-            originLocation = lastLocation;
+            mCurrentLocation = new LatLng(lastLocation);
             setCameraPosition(lastLocation);
         } else {
             locationEngine.addLocationEngineListener(this);
@@ -212,8 +220,9 @@ public class MapFragment extends Fragment implements
             Log.d(TAG, "[onLocationChanged] location is null");
         } else {
             Log.d(TAG, "[onLocationChanged] location is not null");
-            originLocation = location;
+            mCurrentLocation = new LatLng(location);
             setCameraPosition(location);
+            checkProximityToCoins();
         }
     }
 
@@ -255,7 +264,47 @@ public class MapFragment extends Fragment implements
                     .position(coin.getLocation())
                     .icon(icon);
             map.addMarker(marker);
+            Marker coinMarker = new Marker(marker);
+            mMarkers.put(coin, coinMarker);
         }
+    }
+
+    private void checkProximityToCoins() {
+        displayToast("checking proximity");
+        for (Coin c : mUncollectedCoins) {
+            if (mCurrentLocation.distanceTo(c.getLocation()) <= 25) {
+                displayToast("Within 25m");
+                collectCoin(c);
+            }
+        }
+    }
+
+    private void collectCoin(Coin coin) {
+        String msg = "Coin collected: " + coin.getCurrency()
+                + "worth" + String.format("%.4f", coin.getValue());
+        displayToast(msg);
+        map.removeMarker(mMarkers.get(coin));
+//        mUncollectedCoins.remove(coin);
+//        Data.removeCoinFromCollection(coin, UNCOLLECTED, new OnEventListener<String>() {
+//            @Override
+//            public void onSuccess(String object) {
+//                Log.d(TAG, "[collectCoin] successfully removed coin with id: " + coin.getId());
+//            }
+//            @Override
+//            public void onFailure(Exception e) {
+//                Log.d(TAG, "[collectCoin] failed to remove coin with id: " + coin.getId());
+//            }
+//        });
+//        Data.addCoinToCollection(coin, COLLECTED, new OnEventListener<Integer>() {
+//            @Override
+//            public void onSuccess(Integer object) {
+//                Log.d(TAG, "[collectCoin] successfully added coin with id: " + coin.getId());
+//            }
+//            @Override
+//            public void onFailure(Exception e) {
+//                Log.d(TAG, "[collectCoin] failed to add coin with id: " + coin.getId());
+//            }
+//        });
     }
 
     /*
