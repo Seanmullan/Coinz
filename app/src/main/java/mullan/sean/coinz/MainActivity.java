@@ -225,7 +225,10 @@ public class MainActivity extends AppCompatActivity {
      *              6) Update the Data class fields and firebase with the new data
      *
      *            When these processes are completed, the Map Fragment is prompted to
-     *            retrieve the most up to date data from the Data class. }
+     *            retrieve the most up to date data from the Data class.
+      *
+      *           Note: We have to retrieve the existing data regardless, as the ID's
+      *           are required in order to identify which coins we want to remove }
      */
     @SuppressWarnings("unchecked")
     private void populateData() {
@@ -237,78 +240,55 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // If a new day has not yet begun, invoke the Data class to retrieve existing data
-        if (lastSavedDate.equals(currentDate)) {
-            // Retrieve all uncollected coins, then prompt Map to update its data
-            Data.retrieveAllCoinsFromCollection(UNCOLLECTED, new OnEventListener<String>() {
-                @Override
-                public void onSuccess(String object) {
-                    Log.d(TAG, "Successfully retrieved uncollected coins");
-                    MapFragment.updateMapData(getApplicationContext());
-                }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Failed to retrieve uncollected coins with exception ", e);
-                }
-            });
-            // Retrieve all collected coins
-            Data.retrieveAllCoinsFromCollection(COLLECTED, new OnEventListener<String>() {
-                @Override
-                public void onSuccess(String object) {
-                    Log.d(TAG, "Successfully retrieved collected coins");
-                }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Failed to retrieve collected coins with exception ", e);
-                }
-            });
-            //Retrieve all received coins
-            Data.retrieveAllCoinsFromCollection(RECEIVED, new OnEventListener<String>() {
-                @Override
-                public void onSuccess(String object) {
-                    Log.d(TAG, "Successfully retrieved received coins");
-                }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Failed to retrieve received coins with exception ", e);
-                }
-            });
 
-        // If a new day has begun, clear the data from the previous day and fetch the new data
-        } else {
-            Data.updateDate(getCurrentDate());
-            Data.clearAllCoinsFromCollection(UNCOLLECTED, new OnEventListener() {
-                @Override
-                public void onSuccess(Object object) {
-                    Log.d(TAG, "Successfully cleared uncollected coins");
+        // Retrieve all uncollected coins, and use this data to remove these coins if
+        // a new day has begun. Then prompt the application to retrieve new data if it
+        // is a new day
+        Data.retrieveAllCoinsFromCollection(UNCOLLECTED, new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                Log.d(TAG, "Successfully retrieved uncollected coins");
+                if (!currentDate.equals(lastSavedDate)) {
+                    Data.updateDate(getCurrentDate());
+                    Data.clearAllCoinsFromCollection(UNCOLLECTED);
+                    retrieveNewMapData();
                 }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Could not clear uncollected coins with exception: ", e);
+                MapFragment.updateMapData(getApplicationContext());
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve uncollected coins with exception ", e);
+            }
+        });
+        // Retrieve all collected coins. Again, use this data to remove these coins if a
+        // new day has begun
+        Data.retrieveAllCoinsFromCollection(COLLECTED, new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                Log.d(TAG, "Successfully retrieved collected coins");
+                if (!currentDate.equals(lastSavedDate)) {
+                    Data.clearAllCoinsFromCollection(COLLECTED);
                 }
-            });
-            Data.clearAllCoinsFromCollection(COLLECTED, new OnEventListener() {
-                @Override
-                public void onSuccess(Object object) {
-                    Log.d(TAG, "Successfully cleared collected coins");
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve collected coins with exception ", e);
+            }
+        });
+        //Retrieve all received coins, and remove them if a new day has begun
+        Data.retrieveAllCoinsFromCollection(RECEIVED, new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                Log.d(TAG, "Successfully retrieved received coins");
+                if (!currentDate.equals(lastSavedDate)) {
+                    Data.clearAllCoinsFromCollection(RECEIVED);
                 }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Could not clear collected coins with exception: ", e);
-                }
-            });
-            Data.clearAllCoinsFromCollection(RECEIVED, new OnEventListener() {
-                @Override
-                public void onSuccess(Object object) {
-                    Log.d(TAG, "Successfully cleared received coins");
-                }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Could not clear received coins with exception: ", e);
-                }
-            });
-            retrieveNewMapData();
-        }
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve received coins with exception ", e);
+            }
+        });
     }
 
     /*
@@ -319,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
     private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
-        String url = mapUrl + getCurrentDate() + mapJson;
+        String url = mapUrl + "2018/10/29" + mapJson;
         DownloadFileTask downloadTask = new DownloadFileTask(new OnEventListener<String>() {
             @Override
             public void onSuccess(String result) {

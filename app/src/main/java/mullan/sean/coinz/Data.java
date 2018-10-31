@@ -7,7 +7,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public final class Data {
@@ -69,6 +71,7 @@ public final class Data {
      */
     public static void retrieveAllCoinsFromCollection(final String collection,
                                                       final OnEventListener<String> event) {
+        Log.d(TAG, "[retrieveAllCoinsFromCollection] retrieving coins from " + collection);
         mUserDocRef.collection(collection).get()
                 .addOnCompleteListener(task -> {
                     if(task.isSuccessful() && task.getResult() != null) {
@@ -87,6 +90,7 @@ public final class Data {
                                     Log.d(TAG, "Invalid collection argument");
                             }
                         }
+                        Log.d(TAG, "[retrieveAllCoinsFromCollection] success");
                         event.onSuccess("Success");
                     } else {
                         event.onFailure(task.getException());
@@ -96,11 +100,31 @@ public final class Data {
 
     /*
      *  @brief  { This procedure removes all documents within the specified collection
-     *            argument. The caller is notified if the procedure was a success or failure }
+     *            argument, and removes the coin from the corresponding ArrayList }
      */
-    public static void clearAllCoinsFromCollection(final String collection,
-                                                   final OnEventListener<String> event) {
-        // TODO: Clear all documents in specified collection
+    @SuppressWarnings("unchecked")
+    public static void clearAllCoinsFromCollection(String collection) {
+        Log.d(TAG, "[clearAllCoinsFromCollection] clearing coins from " + collection);
+        Iterator<Coin> i;
+        switch (collection) {
+            case UNCOLLECTED:
+                i = mUncollectedCoins.iterator();
+                break;
+            case COLLECTED:
+                i = mCollectedCoins.iterator();
+                break;
+            case RECEIVED:
+                i = mReceivedCoins.iterator();
+                break;
+            default:
+                i = Collections.emptyIterator();
+                Log.d(TAG, "[deleteCoins] invalid collection argument");
+        }
+        while (i.hasNext()) {
+            Coin c = i.next();
+            mUserDocRef.collection(collection).document(c.getId()).delete();
+            i.remove();
+        }
     }
 
     /*
@@ -150,6 +174,7 @@ public final class Data {
     public static void removeCoinFromCollection(Coin coin,
                                                 final String collection,
                                                 OnEventListener<String> event) {
+        Log.d(TAG,  "[removeCoinFromCollection] removing coin from " + collection);
         // Remove coin from appropriate ArrayList
         switch (collection) {
             case UNCOLLECTED:
@@ -165,10 +190,16 @@ public final class Data {
                 Log.d(TAG, "Invalid collection argument");
         }
 
-        // Remove coin from specified collection
         mUserDocRef.collection(collection).document(coin.getId()).delete()
-                .addOnSuccessListener(aVoid -> event.onSuccess("success"))
-                .addOnFailureListener(event::onFailure);
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "COIN REMOVED");
+                        event.onSuccess("success");
+                    } else {
+                        event.onFailure(task.getException());
+                    }
+        });
+        event.onSuccess("success");
     }
 
     /*
@@ -193,8 +224,13 @@ public final class Data {
      *  @brief  { Updates the "lastSavedDate" field on firebase }
      */
     public static void updateDate(String date) {
-        mUserDocRef.update("lastSavedDate", date)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Date successfully updated"))
-                .addOnFailureListener(e -> Log.d(TAG, "Date failed to update with exception ", e));
+        Log.d(TAG, "[updateDate] updating date");
+        mUserDocRef.update("lastSavedDate", date).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d(TAG, "[updateDate] successful");
+            } else {
+                Log.d(TAG, "[updateDate] failed " + task.getException());
+            }
+        });
     }
 }
