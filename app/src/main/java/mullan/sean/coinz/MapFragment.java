@@ -47,10 +47,10 @@ public class MapFragment extends Fragment implements
     private static final String SHIL = "SHIL";
     private static final String QUID = "QUID";
 
-    private static HashMap<Coin,Marker> mMarkers;
-    private static ArrayList<Coin>      mUncollectedCoins;
-    private LatLng                      mCurrentLocation;
+    private static ArrayList<Coin>      mUncollectedCoins = new ArrayList<>();
+    private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
     private static MapboxMap            map;
+    private LatLng                      mCurrentLocation;
     private MapView                     mapView;
     private LocationEngine              locationEngine;
 
@@ -81,9 +81,6 @@ public class MapFragment extends Fragment implements
         // Fetch uncollected coins from Data class
         updateMapData(inflater.getContext());
 
-        // Initialise markers HashMap
-        mMarkers = new HashMap<>();
-
         // Get Mapbox instance
         Mapbox.getInstance(inflater.getContext(), getString(R.string.access_token));
         mapView = view.findViewById(R.id.mapboxMapView);
@@ -98,23 +95,30 @@ public class MapFragment extends Fragment implements
      */
     public static void updateMapData(Context context) {
         Log.d(TAG, "[updateMapData] fetching uncollected coins");
+        Log.d(TAG, "[updateMapData] before fetch - size = " + mUncollectedCoins.size());
         mUncollectedCoins = Data.getUncollectedCoins();
+        Log.d(TAG, "[updateMapData] after fetch - size = " + mUncollectedCoins.size());
         updateMarkers(context);
     }
 
     /*
      *  @brief  { Implements callback for Mapbox. If map is not null, initialise map
-     *            variable and enable the devices location }
+     *            variable and enable the devices location. Also update the markers
+     *            in case updateMapData() is called before the map is ready e.g. this
+     *            is likely to happen if the user loads the app, switches to another
+     *            fragment then returns to the Map fragment }
      */
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
         if (mapboxMap == null) {
             Log.d(TAG, "[onMapReady] mapBox is null");
         } else {
+            Log.d(TAG, "[onMapReady] mapBox is ready");
             map = mapboxMap;
             map.getUiSettings().setCompassEnabled(true);
             map.getUiSettings().setZoomControlsEnabled(true);
             enableLocation();
+            updateMarkers(getContext());
         }
     }
 
@@ -240,6 +244,7 @@ public class MapFragment extends Fragment implements
      *            coin is represented by its corresponding coin image }
      */
     private static void updateMarkers(Context context) {
+        Log.d(TAG, "[update markers] updating markers");
         IconFactory iconFactory = IconFactory.getInstance(context);
         Icon icon;
         for (Coin coin : mUncollectedCoins) {
@@ -269,42 +274,56 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    /*
+     *  @brief  { Checks the distance between the devices location and the location
+     *            of all uncollected coins. If the distance is less than or equal to
+     *            25 metres, then collect the coin }
+     */
     private void checkProximityToCoins() {
-        displayToast("checking proximity");
         for (Coin c : mUncollectedCoins) {
             if (mCurrentLocation.distanceTo(c.getLocation()) <= 25) {
-                displayToast("Within 25m");
                 collectCoin(c);
+                break;
             }
         }
     }
 
+    /*
+     *  @brief  { Inform the user that they have collected a coin. Then, remove the marker from the
+     *            map and remove the coin from the uncollected coins ArrayList. The coin will then
+     *            be removed from the Uncollected subcollection in firebase and placed in the
+     *            Collected subcollection }
+     */
     private void collectCoin(Coin coin) {
         String msg = "Coin collected: " + coin.getCurrency()
-                + "worth" + String.format("%.4f", coin.getValue());
+                + " worth " + String.format("%.4f", coin.getValue());
         displayToast(msg);
         map.removeMarker(mMarkers.get(coin));
-//        mUncollectedCoins.remove(coin);
-//        Data.removeCoinFromCollection(coin, UNCOLLECTED, new OnEventListener<String>() {
-//            @Override
-//            public void onSuccess(String object) {
-//                Log.d(TAG, "[collectCoin] successfully removed coin with id: " + coin.getId());
-//            }
-//            @Override
-//            public void onFailure(Exception e) {
-//                Log.d(TAG, "[collectCoin] failed to remove coin with id: " + coin.getId());
-//            }
-//        });
-//        Data.addCoinToCollection(coin, COLLECTED, new OnEventListener<Integer>() {
-//            @Override
-//            public void onSuccess(Integer object) {
-//                Log.d(TAG, "[collectCoin] successfully added coin with id: " + coin.getId());
-//            }
-//            @Override
-//            public void onFailure(Exception e) {
-//                Log.d(TAG, "[collectCoin] failed to add coin with id: " + coin.getId());
-//            }
-//        });
+        mUncollectedCoins.remove(coin);
+        Data.removeCoinFromCollection(coin, UNCOLLECTED, new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                Log.d(TAG,
+                "[collectCoin] successfully removed coin from Uncollected with id: " + coin.getId());
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG,
+                "[collectCoin] failed to remove coin from Uncollected with id: " + coin.getId());
+            }
+        });
+        Data.addCoinToCollection(coin, COLLECTED, new OnEventListener<Integer>() {
+            @Override
+            public void onSuccess(Integer object) {
+                Log.d(TAG,
+                "[collectCoin] successfully added coin to Collected with id: " + coin.getId());
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG,
+                "[collectCoin] failed to add coin to Collected with id: " + coin.getId());
+            }
+        });
     }
 
     /*
