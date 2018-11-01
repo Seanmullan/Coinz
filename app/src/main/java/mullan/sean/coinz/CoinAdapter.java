@@ -18,7 +18,7 @@ import javax.annotation.Nonnull;
 
 public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> {
 
-    private static final String TAG = "C_ADAPTER";
+    private static final String TAG = "C_COIN_ADAPTER";
 
     private ArrayList<Coin> mCoins;
     private Context mContext;

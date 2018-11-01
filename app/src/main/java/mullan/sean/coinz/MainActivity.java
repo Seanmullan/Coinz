@@ -285,6 +285,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve received coins with exception ", e);
             }
         });
+        // Retrieve the users friends
+        Data.retrieveAllFriends();
     }
 
     /*

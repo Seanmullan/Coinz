@@ -22,17 +22,18 @@ public final class Data {
     public static final String UNCOLLECTED = "uncollected";
     public static final String COLLECTED   = "collected";
     public static final String RECEIVED    = "received";
+    public static final String FRIENDS     = "friends";
     public static final String DOLR        = "DOLR";
     public static final String QUID        = "QUID";
     public static final String SHIL        = "SHIL";
     public static final String PENY        = "PENY";
-
     private static final String TAG        = "C_DATA";
 
     private static DocumentReference mUserDocRef;
     private static ArrayList<Coin>   mUncollectedCoins;
     private static ArrayList<Coin>   mCollectedCoins;
     private static ArrayList<Coin>   mReceivedCoins;
+    private static ArrayList<Friend> mFriends;
     private static int               mUncollectedCoinCount;
 
     /*
@@ -44,6 +45,7 @@ public final class Data {
         mUncollectedCoins     = new ArrayList<>();
         mCollectedCoins       = new ArrayList<>();
         mReceivedCoins        = new ArrayList<>();
+        mFriends              = new ArrayList<>();
         mUncollectedCoinCount = 0;
     }
 
@@ -66,6 +68,13 @@ public final class Data {
      */
     public static ArrayList<Coin> getReceivedCoins() {
         return mReceivedCoins;
+    }
+
+    /*
+     *  @return  { ArrayList of users friends }
+     */
+    public static ArrayList<Friend> getFriends() {
+        return mFriends;
     }
 
     /*
@@ -207,6 +216,21 @@ public final class Data {
         event.onSuccess("success");
     }
 
+    public static void retrieveAllFriends() {
+        Log.d(TAG, "[retrieveAllFriends] retrieving friends");
+        mUserDocRef.collection(FRIENDS).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            mFriends.add(documentToFriend(document));
+                        }
+                        Log.d(TAG, "[retrieveAllFriends] success");
+                    } else {
+                        Log.d(TAG, "[retrieveAllFriends] failed to retrieve friends");
+                    }
+                    });
+    }
+
     /*
      *  @brief  { Creates a coin object from the document data }
      *
@@ -223,6 +247,13 @@ public final class Data {
         double longitude  = (double) coinData.get("longitude");
         LatLng location   = new LatLng(latitude, longitude);
         return new Coin(id, value, currency, symbol, colour, location);
+    }
+
+    private static Friend documentToFriend(QueryDocumentSnapshot doc) {
+        Map<String, Object> friendData = doc.getData();
+        String uid      = doc.getId();
+        String username = (String) friendData.get("username");
+        return new Friend(uid, username);
     }
 
     /*

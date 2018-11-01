@@ -53,7 +53,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         Button btnCollected = view.findViewById(R.id.btn_collected);
         Button btnReceived  = view.findViewById(R.id.btn_received);
 
-        mRecyclerView = view.findViewById(R.id.my_recycler_view);
+        mRecyclerView = view.findViewById(R.id.coin_recycler_view);
 
         // Set layout manager
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(inflater.getContext());

@@ -1,15 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapFragment">
+    tools:context=".WalletFragment">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
+    <Button
+        android:id="@+id/btn_requests"
+        android:layout_width="159dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/friends_recycler_view"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="199dp"
+        android:layout_marginEnd="26dp"
+        android:layout_marginBottom="2dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:text="Requests"
+        android:textColor="@color/common_google_signin_btn_text_dark_default" />
+
+    <Button
+        android:id="@+id/btn_friends"
+        android:layout_width="159dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/friends_recycler_view"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="26dp"
+        android:layout_marginBottom="2dp"
+        android:backgroundTint="@color/colorPrimary"
         android:text="Friends"
-        android:textSize="22dp" />
+        android:textColor="@color/common_google_signin_btn_text_dark_default" />
 
-</FrameLayout>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/friends_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="497dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:scrollbars="vertical" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/requests_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="497dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:scrollbars="vertical" />
+
+</RelativeLayout>
