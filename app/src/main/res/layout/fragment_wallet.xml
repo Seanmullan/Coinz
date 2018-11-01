@@ -1,15 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapFragment">
+    tools:context=".WalletFragment">
 
-    <TextView
+    <Button
+        android:id="@+id/btn_received"
+        android:layout_width="159dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/my_recycler_view"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="199dp"
+        android:layout_marginEnd="26dp"
+        android:layout_marginBottom="2dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:text="Received"
+        android:textColor="@color/common_google_signin_btn_text_dark_default" />
+
+    <Button
+        android:id="@+id/btn_collected"
+        android:layout_width="159dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/my_recycler_view"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="26dp"
+        android:layout_marginBottom="2dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:text="Collected"
+        android:textColor="@color/common_google_signin_btn_text_dark_default" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Wallet"
-        android:textSize="22dp" />
+        android:layout_height="497dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:scrollbars="vertical" />
 
-</FrameLayout>
+</RelativeLayout>

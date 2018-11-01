@@ -19,10 +19,15 @@ public final class Data {
      *  the firebase database
      */
 
-    private static final String TAG         = "C_DATA";
-    private static final String UNCOLLECTED = "uncollected";
-    private static final String COLLECTED   = "collected";
-    private static final String RECEIVED    = "received";
+    public static final String UNCOLLECTED = "uncollected";
+    public static final String COLLECTED   = "collected";
+    public static final String RECEIVED    = "received";
+    public static final String DOLR        = "DOLR";
+    public static final String QUID        = "QUID";
+    public static final String SHIL        = "SHIL";
+    public static final String PENY        = "PENY";
+
+    private static final String TAG        = "C_DATA";
 
     private static DocumentReference mUserDocRef;
     private static ArrayList<Coin>   mUncollectedCoins;
@@ -35,7 +40,7 @@ public final class Data {
      *            the users document within firebase, and initialise local variables }
      */
     public static void init(DocumentReference docRef) {
-        Data.mUserDocRef      = docRef;
+        mUserDocRef           = docRef;
         mUncollectedCoins     = new ArrayList<>();
         mCollectedCoins       = new ArrayList<>();
         mReceivedCoins        = new ArrayList<>();
@@ -118,7 +123,7 @@ public final class Data {
                 break;
             default:
                 i = Collections.emptyIterator();
-                Log.d(TAG, "[deleteCoins] invalid collection argument");
+                Log.d(TAG, "[clearAllCoinsFromCollection] invalid collection argument");
         }
         while (i.hasNext()) {
             Coin c = i.next();
@@ -150,7 +155,7 @@ public final class Data {
                 mReceivedCoins.add(coin);
                 break;
             default:
-                Log.d(TAG, "Invalid collection argument");
+                Log.d(TAG, "[addCoinToCollection] invalid collection argument");
         }
 
         // Upload coin to specified collection on firebase
@@ -187,7 +192,7 @@ public final class Data {
                 mReceivedCoins.remove(coin);
                 break;
             default:
-                Log.d(TAG, "Invalid collection argument");
+                Log.d(TAG, "[removeCoinFromCollection] invalid collection argument");
         }
 
         mUserDocRef.collection(collection).document(coin.getId()).delete()

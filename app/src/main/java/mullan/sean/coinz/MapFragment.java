@@ -39,13 +39,7 @@ import javax.annotation.Nonnull;
 public class MapFragment extends Fragment implements
         OnMapReadyCallback, LocationEngineListener, PermissionsListener  {
 
-    private static final String UNCOLLECTED = "uncollected";
-    private static final String COLLECTED   = "collected";
     private static final String TAG  = "C_MAP";
-    private static final String DOLR = "DOLR";
-    private static final String PENY = "PENY";
-    private static final String SHIL = "SHIL";
-    private static final String QUID = "QUID";
 
     private static ArrayList<Coin>      mUncollectedCoins = new ArrayList<>();
     private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
@@ -249,16 +243,16 @@ public class MapFragment extends Fragment implements
         Icon icon;
         for (Coin coin : mUncollectedCoins) {
             switch (coin.getCurrency()) {
-                case DOLR:
+                case Data.DOLR:
                     icon = iconFactory.fromResource(R.drawable.dolr);
                     break;
-                case PENY:
+                case Data.PENY:
                     icon = iconFactory.fromResource(R.drawable.peny);
                     break;
-                case SHIL:
+                case Data.SHIL:
                     icon = iconFactory.fromResource(R.drawable.shil);
                     break;
-                case QUID:
+                case Data.QUID:
                     icon = iconFactory.fromResource(R.drawable.quid);
                     break;
                 default:
@@ -300,7 +294,7 @@ public class MapFragment extends Fragment implements
         displayToast(msg);
         map.removeMarker(mMarkers.get(coin));
         mUncollectedCoins.remove(coin);
-        Data.removeCoinFromCollection(coin, UNCOLLECTED, new OnEventListener<String>() {
+        Data.removeCoinFromCollection(coin, Data.UNCOLLECTED, new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG,
@@ -312,7 +306,7 @@ public class MapFragment extends Fragment implements
                 "[collectCoin] failed to remove coin from Uncollected with id: " + coin.getId());
             }
         });
-        Data.addCoinToCollection(coin, COLLECTED, new OnEventListener<Integer>() {
+        Data.addCoinToCollection(coin, Data.COLLECTED, new OnEventListener<Integer>() {
             @Override
             public void onSuccess(Integer object) {
                 Log.d(TAG,

@@ -27,10 +27,7 @@ import org.json.*;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG         = "C_MAIN";
-    private static final String UNCOLLECTED = "uncollected";
-    private static final String COLLECTED   = "collected";
-    private static final String RECEIVED    = "received";
+    private static final String TAG = "C_MAIN";
 
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseFirestore mFirestore;
@@ -240,17 +237,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
         // Retrieve all uncollected coins, and use this data to remove these coins if
         // a new day has begun. Then prompt the application to retrieve new data if it
         // is a new day
-        Data.retrieveAllCoinsFromCollection(UNCOLLECTED, new OnEventListener<String>() {
+        Data.retrieveAllCoinsFromCollection(Data.UNCOLLECTED, new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved uncollected coins");
                 if (!currentDate.equals(lastSavedDate)) {
                     Data.updateDate(getCurrentDate());
-                    Data.clearAllCoinsFromCollection(UNCOLLECTED);
+                    Data.clearAllCoinsFromCollection(Data.UNCOLLECTED);
                     retrieveNewMapData();
                 }
                 MapFragment.updateMapData(getApplicationContext());
@@ -262,12 +258,12 @@ public class MainActivity extends AppCompatActivity {
         });
         // Retrieve all collected coins. Again, use this data to remove these coins if a
         // new day has begun
-        Data.retrieveAllCoinsFromCollection(COLLECTED, new OnEventListener<String>() {
+        Data.retrieveAllCoinsFromCollection(Data.COLLECTED, new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved collected coins");
                 if (!currentDate.equals(lastSavedDate)) {
-                    Data.clearAllCoinsFromCollection(COLLECTED);
+                    Data.clearAllCoinsFromCollection(Data.COLLECTED);
                 }
             }
             @Override
@@ -276,12 +272,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //Retrieve all received coins, and remove them if a new day has begun
-        Data.retrieveAllCoinsFromCollection(RECEIVED, new OnEventListener<String>() {
+        Data.retrieveAllCoinsFromCollection(Data.RECEIVED, new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved received coins");
                 if (!currentDate.equals(lastSavedDate)) {
-                    Data.clearAllCoinsFromCollection(RECEIVED);
+                    Data.clearAllCoinsFromCollection(Data.RECEIVED);
                 }
             }
             @Override
@@ -355,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, symbol, colour, location);
-            Data.addCoinToCollection(coin, UNCOLLECTED, new OnEventListener() {
+            Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d(TAG, "Coin successfully added with ID: " + id);
