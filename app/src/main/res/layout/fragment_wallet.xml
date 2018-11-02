@@ -3,13 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".WalletFragment">
 
     <Button
         android:id="@+id/btn_received"
         android:layout_width="159dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/coin_recycler_view"
+        android:layout_above="@+id/col_recycler_view"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="199dp"
@@ -23,7 +24,7 @@
         android:id="@+id/btn_collected"
         android:layout_width="159dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/coin_recycler_view"
+        android:layout_above="@+id/col_recycler_view"
         android:layout_alignParentStart="true"
         android:layout_marginStart="26dp"
         android:layout_marginBottom="2dp"
@@ -32,11 +33,30 @@
         android:textColor="@color/common_google_signin_btn_text_dark_default" />
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/coin_recycler_view"
+        android:id="@+id/col_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="497dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
         android:scrollbars="vertical" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rec_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="497dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:scrollbars="vertical" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/sendcoins"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="35dp"
+        android:layout_marginBottom="35dp"
+        android:src="@drawable/outline_send_white_18dp"
+        app:backgroundTint="@color/colorPrimary" />
 
 </RelativeLayout>

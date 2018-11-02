@@ -2,6 +2,7 @@ package mullan.sean.coinz;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
@@ -65,6 +66,11 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
         Coin coin = mCoins.get(position);
         holder.mCurrency.setText(coin.getCurrency());
         holder.mValue.setText(String.format("%.6f", coin.getValue()));
+        holder.itemView.setBackgroundColor(coin.isSelected() ? Color.GRAY : Color.WHITE);
+        holder.itemView.setOnClickListener(v -> {
+            coin.setSelected(!coin.isSelected());
+            holder.itemView.setBackgroundColor(coin.isSelected() ? Color.LTGRAY : Color.WHITE);
+        });
         Drawable icon;
         switch (coin.getCurrency()) {
             case Data.DOLR:

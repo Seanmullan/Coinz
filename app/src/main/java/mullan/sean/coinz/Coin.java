@@ -6,20 +6,22 @@ import java.util.HashMap;
 
 public class Coin {
 
-    private String id;
-    private double value;
-    private String currency;
-    private String symbol;
-    private String colour;
-    private LatLng location;
+    private String  id;
+    private double  value;
+    private String  currency;
+    private String  symbol;
+    private String  colour;
+    private LatLng  location;
+    private boolean isSelected;
 
     public Coin(String id, double value, String currency, String symbol, String colour, LatLng location) {
-        this.id       = id;
-        this.value    = value;
-        this.currency = currency;
-        this.symbol   = symbol;
-        this.colour   = colour;
-        this.location = location;
+        this.id         = id;
+        this.value      = value;
+        this.currency   = currency;
+        this.symbol     = symbol;
+        this.colour     = colour;
+        this.location   = location;
+        this.isSelected = false;
     }
 
     public String getId() {
@@ -67,6 +69,10 @@ public class Coin {
     public void setLocation(LatLng location) {
         this.location = location;
     }
+
+    public boolean isSelected() { return isSelected; }
+
+    public void setSelected(boolean selected) { isSelected = selected; }
 
     public HashMap<String,Object> getCoinMap() {
         HashMap<String,Object> coinData = new HashMap<>();

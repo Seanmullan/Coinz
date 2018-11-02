@@ -1,6 +1,9 @@
 package mullan.sean.coinz;
 
+import android.app.AlertDialog;
+import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -20,9 +25,12 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_WALLET";
 
-    private RecyclerView    mRecyclerView;
-    private CoinAdapter     mAdapter;
-    private ArrayList<Coin> mCoins;
+    private RecyclerView    mRecyclerViewCol;
+    private RecyclerView    mRecyclerViewRec;
+    private CoinAdapter     mCollectedAdapter;
+    private CoinAdapter     mReceivedAdapter;
+    private ArrayList<Coin> mCollectedCoins;
+    private ArrayList<Coin> mReceivedCoins;
 
     /*
      * @brief { Required empty public constructor }
@@ -48,25 +56,37 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         View view = inflater.inflate(R.layout.fragment_wallet, container, false);
 
-        mCoins = Data.getCollectedCoins();
+        mCollectedCoins = Data.getCollectedCoins();
+        mReceivedCoins  = Data.getReceivedCoins();
 
+        FloatingActionButton fabSend = view.findViewById(R.id.sendcoins);
         Button btnCollected = view.findViewById(R.id.btn_collected);
         Button btnReceived  = view.findViewById(R.id.btn_received);
 
-        mRecyclerView = view.findViewById(R.id.coin_recycler_view);
+        mRecyclerViewCol = view.findViewById(R.id.col_recycler_view);
+        mRecyclerViewRec = view.findViewById(R.id.rec_recycler_view);
+        mRecyclerViewRec.setVisibility(View.INVISIBLE);
 
         // Set layout manager
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(inflater.getContext());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        RecyclerView.LayoutManager mLayoutCol = new LinearLayoutManager(inflater.getContext());
+        mRecyclerViewCol.setLayoutManager(mLayoutCol);
+        RecyclerView.LayoutManager mLayoutRec = new LinearLayoutManager(inflater.getContext());
+        mRecyclerViewCol.setLayoutManager(mLayoutRec);
 
         // Initialise adapter with coins ArrayList
-        mAdapter = new CoinAdapter(mCoins, inflater.getContext());
+        mCollectedAdapter = new CoinAdapter(mCollectedCoins, inflater.getContext());
+        mReceivedAdapter  = new CoinAdapter(mReceivedCoins, inflater.getContext());
 
         // Add line a line between each object in the recycler view list
-        mRecyclerView.addItemDecoration(
+        mRecyclerViewCol.addItemDecoration(
                 new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
-        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerViewRec.addItemDecoration(
+                new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
 
+        mRecyclerViewCol.setAdapter(mCollectedAdapter);
+        mRecyclerViewRec.setAdapter(mReceivedAdapter);
+
+        fabSend.setOnClickListener(this);
         btnCollected.setOnClickListener(this);
         btnReceived.setOnClickListener(this);
 
@@ -81,16 +101,103 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         Log.d(TAG, "[onClick] updating recycler view");
         switch(v.getId()) {
             case R.id.btn_collected:
-                mCoins = Data.getCollectedCoins();
+                updateCollectedView();
                 break;
             case R.id.btn_received:
-                mCoins = Data.getReceivedCoins();
+                updateReceivedView();
                 break;
+            case R.id.sendcoins:
+                openSendDialogue();
             default:
                 break;
         }
-        mAdapter = new CoinAdapter(mCoins, getLayoutInflater().getContext());
-        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes received recycler invisible
+     *            and makes collected recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateCollectedView() {
+        mCollectedCoins = Data.getCollectedCoins();
+        mRecyclerViewRec.setVisibility(View.INVISIBLE);
+        mRecyclerViewCol.setVisibility(View.VISIBLE);
+        mCollectedAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes friends recycler invisible
+     *            and makes recycler recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateReceivedView() {
+        mReceivedCoins = Data.getReceivedCoins();
+        mRecyclerViewCol.setVisibility(View.INVISIBLE);
+        mRecyclerViewRec.setVisibility(View.VISIBLE);
+        mReceivedAdapter.notifyDataSetChanged();
+    }
+
+    private void openSendDialogue() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
+        builder.setTitle("Transfer selected coins");
+
+        // Provide options for user
+        CharSequence[] options = {"To bank account", "To a friend"};
+
+        builder.setItems(options, (dialog, which) -> {
+            switch(which) {
+                case 0:
+                    transferToBankAccount();
+                    break;
+                case 1:
+                    transferToFriend();
+                    break;
+                default:
+                    Log.d(TAG, "[openSendDialogue] option not recognised");
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    private void transferToBankAccount() {
+        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+           // TODO: get selected collected coins and transfer to bank
+        } else {
+            // TODO: get received collected coins and transfer to bank
+        }
+    }
+
+    private void transferToFriend() {
+        ArrayList<Coin> selectedCoins;
+        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+            selectedCoins = getSelectedCoins(Data.COLLECTED);
+        } else {
+            selectedCoins = getSelectedCoins(Data.RECEIVED);
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
+        builder.setTitle("Select friend");
+    }
+
+    private ArrayList<Coin> getSelectedCoins(String collection) {
+        ArrayList<Coin> selectedCoins = new ArrayList<>();
+        if (collection.equals(Data.COLLECTED)) {
+            for (Coin c : mCollectedCoins) {
+                if (c.isSelected()) {
+                    selectedCoins.add(c);
+                }
+            }
+        } else {
+            for (Coin c : mReceivedCoins) {
+                if (c.isSelected()) {
+                    selectedCoins.add(c);
+                }
+            }
+        }
+        return selectedCoins;
     }
 
     @Override
