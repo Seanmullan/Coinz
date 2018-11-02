@@ -2,7 +2,9 @@ package mullan.sean.coinz;
 
 import android.util.Log;
 
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
@@ -30,19 +32,22 @@ public final class Data {
     public static final String PENY        = "PENY";
     private static final String TAG        = "C_DATA";
 
-    private static DocumentReference mUserDocRef;
-    private static ArrayList<Coin>   mUncollectedCoins;
-    private static ArrayList<Coin>   mCollectedCoins;
-    private static ArrayList<Coin>   mReceivedCoins;
-    private static ArrayList<Friend> mFriends;
-    private static ArrayList<Friend> mRequests;
-    private static int               mUncollectedCoinCount;
+    private static CollectionReference mUsersRef;
+    private static DocumentReference   mUserDocRef;
+    private static DocumentSnapshot    mUserDocSnap;
+    private static ArrayList<Coin>     mUncollectedCoins;
+    private static ArrayList<Coin>     mCollectedCoins;
+    private static ArrayList<Coin>     mReceivedCoins;
+    private static ArrayList<Friend>   mFriends;
+    private static ArrayList<Friend>   mRequests;
+    private static int                 mUncollectedCoinCount;
 
     /*
      *  @brief  { Initialise the document reference that will be used to identify
      *            the users document within firebase, and initialise local variables }
      */
-    public static void init(DocumentReference docRef) {
+    public static void init(DocumentReference docRef, CollectionReference collRef) {
+        mUsersRef             = collRef;
         mUserDocRef           = docRef;
         mUncollectedCoins     = new ArrayList<>();
         mCollectedCoins       = new ArrayList<>();
@@ -50,6 +55,10 @@ public final class Data {
         mFriends              = new ArrayList<>();
         mRequests             = new ArrayList<>();
         mUncollectedCoinCount = 0;
+    }
+
+    public static void setUserDocSnap(DocumentSnapshot docSnap) {
+        mUserDocSnap = docSnap;
     }
 
     /*
@@ -182,7 +191,7 @@ public final class Data {
         HashMap<String,Object> coinData = coin.getCoinMap();
         mUserDocRef.collection(collection).document(coinId).set(coinData)
                 .addOnSuccessListener(aVoid -> {
-                    if (collection == UNCOLLECTED) {
+                    if (collection.equals(UNCOLLECTED)) {
                         event.onSuccess(++mUncollectedCoinCount);
                     } else {
                         event.onSuccess(1);
@@ -226,6 +235,11 @@ public final class Data {
         event.onSuccess("success");
     }
 
+    /*
+     *  @brief  { Retrieves all documents in the users friends subcollection,
+     *            then creates a Friend object for each document and stores
+     *            the objects in an ArrayList }
+     */
     public static void retrieveAllFriends() {
         Log.d(TAG, "[retrieveAllFriends] retrieving friends");
         mUserDocRef.collection(FRIENDS).get()
@@ -241,6 +255,11 @@ public final class Data {
                     });
     }
 
+    /*
+     *  @brief  { Retrieves all documents in the users request's subcollection,
+     *            then creates a Friend object for each document and stores
+     *            the objects in an ArrayList }
+     */
     public static void retrieveAllRequests() {
         Log.d(TAG, "[retrieveAllRequests] retrieving friend requests");
         mUserDocRef.collection(REQUESTS).get()
@@ -252,6 +271,75 @@ public final class Data {
                         Log.d(TAG, "[retrieveAllRequests] success");
                     } else {
                         Log.d(TAG, "[retrieveAllRequests] failed to retrieve friends");
+                    }
+                });
+    }
+
+    /*
+     *  @brief  { Performs three steps to accept a friend request:
+     *             1) Remove friend from users requests subcollection
+     *             2) Add friend to users friends subcollection
+     *             3) Add user to the requester's friends subcollection
+     */
+    public static void acceptFriendRequest(Friend friend) {
+        // Remove friend from users requests subcollection
+        mRequests.remove(friend);
+        String friendId = friend.getUserID();
+        mUserDocRef.collection(REQUESTS).document(friendId).delete()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG,
+                        "[acceptFriendRequest] successfully removed from requests: " + friendId);
+                    } else {
+                        Log.d(TAG,
+                        "[acceptFriendRequest] failed to remove from requests: " + friendId);
+                    }
+                });
+
+        // Add friend to users friends subcollection
+        mFriends.add(friend);
+        HashMap<String,String> friendMap = new HashMap<>();
+        friendMap.put("username", friend.getUsername());
+        mUserDocRef.collection(FRIENDS).document(friendId).set(friendMap)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG,
+                                "[acceptFriendRequest] successfully added friend: " + friendId);
+                    } else {
+                        Log.d(TAG,
+                                "[acceptFriendRequest] failed to add friend: " + friendId);
+                    }
+                });
+
+        // Add user to the requester's friends subcollection
+        HashMap<String,String> userMap = new HashMap<>();
+        userMap.put("username", mUserDocSnap.getString("username"));
+        mUsersRef.document(friendId).collection(FRIENDS).document(mUserDocRef.getId()).set(userMap)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG,
+                        "[acceptFriendRequest] successfully added user to requester's friends");
+                    } else {
+                        Log.d(TAG,
+                        "[acceptFriendRequest] failed to add user to requester's friends");
+                    }
+                });
+    }
+
+    /*
+     *  @brief  {  Removes friend requester from users requests subcollection
+     */
+    public static void declineFriendRequest(Friend friend) {
+        mRequests.remove(friend);
+        String friendId = friend.getUserID();
+        mUserDocRef.collection(REQUESTS).document(friendId).delete()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG,
+                                "[declineFriendRequest] successfully removed from requests: " + friendId);
+                    } else {
+                        Log.d(TAG,
+                                "[declineFriendRequest] failed to remove from requests: " + friendId);
                     }
                 });
     }
@@ -274,11 +362,17 @@ public final class Data {
         return new Coin(id, value, currency, symbol, colour, location);
     }
 
+    /*
+     *  @brief  { Creates a friend object from the document data }
+     *
+     *  @return { Friend object }
+     */
     private static Friend documentToFriend(QueryDocumentSnapshot doc) {
         Map<String, Object> friendData = doc.getData();
         String uid      = doc.getId();
         String username = (String) friendData.get("username");
-        return new Friend(uid, username);
+        String email    = (String) friendData.get("email");
+        return new Friend(uid, username, email);
     }
 
     /*

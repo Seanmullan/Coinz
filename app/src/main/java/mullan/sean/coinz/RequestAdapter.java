@@ -36,6 +36,7 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
         private TextView username;
+        private TextView email;
         private Button   btnAccept;
         private Button   btnDecline;
         private WeakReference<ClickListener> acceptListenerRef;
@@ -45,6 +46,7 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
             super(view);
 
             username = view.findViewById(R.id.friends_name);
+            email = view.findViewById(R.id.friends_email);
             btnAccept = view.findViewById(R.id.accept);
             btnDecline = view.findViewById(R.id.decline);
             acceptListenerRef  = new WeakReference<>(acceptListener);
@@ -84,10 +86,11 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
     public void onBindViewHolder(@Nonnull RequestAdapter.MyViewHolder holder, int position) {
         Friend request = mRequests.get(position);
         holder.username.setText(request.getUsername());
+        holder.email.setText(request.getEmail());
     }
 
     /*
-     *  @return  { Size of your friends ArrayList (invoked by the layout manager) }
+     *  @return  { Size of your friend requests ArrayList (invoked by the layout manager) }
      */
     @Override
     public int getItemCount() {

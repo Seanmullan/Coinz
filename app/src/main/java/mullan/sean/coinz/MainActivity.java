@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -151,36 +152,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     *  @brief  { Invoke superclass to resume application }
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    /*
-     *  @brief  { Add authentication state listener to firebase authentication
-     *            instance }
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
-
-    }
-
-    /*
-     *  @brief  { Remove authentication state listener if activity is stopped }
-     */
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }
-    }
-
-    /*
      *  @brief  { This method begins the process of data retrieval upon boot up.
      *            The first step is to retrieve the users document, then the Data
      *            class is populated given the users document. See the populateData()
@@ -188,13 +159,15 @@ public class MainActivity extends AppCompatActivity {
      */
     private void getUserDocument(final String uid) {
         DocumentReference docRef = mFirestore.collection("users").document(uid);
-        Data.init(docRef);
+        CollectionReference collRef = mFirestore.collection("users");
+        Data.init(docRef, collRef);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot document = task.getResult();
                 if (document != null) {
                     // Initialise user document reference and retrieve map data
                     mUserDoc = document;
+                    Data.setUserDocSnap(document);
                     populateData();
                 } else {
                     Log.d(TAG, "Failed to retrieve user document with ID " + uid);
@@ -380,5 +353,48 @@ public class MainActivity extends AppCompatActivity {
         }
         // Update the map after the coins have been locally added to the Data class
         MapFragment.updateMapData(getApplicationContext());
+    }
+
+    /*
+     *  @brief  { Invoke superclass to resume application }
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected  void onPause() {
+        super.onPause();
+    }
+
+    /*
+     *  @brief  { Add authentication state listener to firebase authentication
+     *            instance }
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+
+    }
+
+    /*
+     *  @brief  { Remove authentication state listener if activity is stopped }
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
+
+    @Override
+    protected  void onDestroy() {
+        super.onDestroy();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 }

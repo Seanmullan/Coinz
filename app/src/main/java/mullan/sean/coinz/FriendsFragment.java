@@ -74,12 +74,16 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         mRequestAdapter = new RequestAdapter(mRequests,
                 position -> {
                     Friend friend = mRequests.get(position);
-                    String msg = "Friend accepted: " + friend.getUsername();
+                    Data.acceptFriendRequest(friend);
+                    String msg = "Friend request accepted: " + friend.getUsername();
                     Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
+                    updateRequestsView();
                 }, position -> {
                     Friend friend = mRequests.get(position);
-                    String msg = "Friend declined: " + friend.getUsername();
+                    Data.declineFriendRequest(friend);
+                    String msg = "Friend request declined: " + friend.getUsername();
                     Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
+                    updateRequestsView();
                 });
 
         // Add line a line between each object in the recycler view list
@@ -106,19 +110,38 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         Log.d(TAG, "[onClick] updating recycler view");
         switch (v.getId()) {
             case R.id.btn_friends:
-                mFriends = Data.getFriends();
-                mRecyclerViewRequests.setVisibility(View.INVISIBLE);
-                mRecyclerViewFriends.setVisibility(View.VISIBLE);
-                mFriendsAdapter = new FriendAdapter(mFriends);
-                mRecyclerViewFriends.setAdapter(mFriendsAdapter);
+                updateFriendsView();
                 break;
             case R.id.btn_requests:
-                mRecyclerViewFriends.setVisibility(View.INVISIBLE);
-                mRecyclerViewRequests.setVisibility(View.VISIBLE);
+                updateRequestsView();
                 break;
             default:
                 break;
         }
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes requests recycler invisible
+     *            and makes friends recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateFriendsView() {
+        mFriends = Data.getFriends();
+        mRecyclerViewRequests.setVisibility(View.INVISIBLE);
+        mRecyclerViewFriends.setVisibility(View.VISIBLE);
+        mFriendsAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes friends recycler invisible
+     *            and makes recycler recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateRequestsView() {
+        mRequests = Data.getRequests();
+        mRecyclerViewFriends.setVisibility(View.INVISIBLE);
+        mRecyclerViewRequests.setVisibility(View.VISIBLE);
+        mRequestAdapter.notifyDataSetChanged();
     }
 
     @Override

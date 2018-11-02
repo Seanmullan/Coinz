@@ -19,9 +19,11 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView mUsername;
+        public TextView mEmail;
         public MyViewHolder(View view) {
             super(view);
             mUsername = view.findViewById(R.id.friends_name);
+            mEmail    = view.findViewById(R.id.friends_email);
         }
     }
 
@@ -50,6 +52,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
     public void onBindViewHolder(@Nonnull FriendAdapter.MyViewHolder holder, int position) {
         Friend friend = mFriends.get(position);
         holder.mUsername.setText(friend.getUsername());
+        holder.mEmail.setText(friend.getEmail());
     }
 
     /*
