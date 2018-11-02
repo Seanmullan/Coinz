@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -22,7 +23,9 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
     private RecyclerView mRecyclerViewFriends;
     private RecyclerView mRecyclerViewRequests;
     private FriendAdapter mFriendsAdapter;
+    private RequestAdapter mRequestAdapter;
     private ArrayList<Friend> mFriends;
+    private ArrayList<Friend> mRequests;
 
     /*
      * @brief { Required empty public constructor }
@@ -50,6 +53,7 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         View view = inflater.inflate(R.layout.fragment_friends, container, false);
 
         mFriends = Data.getFriends();
+        mRequests = Data.getRequests();
 
         Button btnFriends = view.findViewById(R.id.btn_friends);
         Button btnRequests = view.findViewById(R.id.btn_requests);
@@ -67,6 +71,17 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         // Initialise adapter with coins ArrayList
         mFriendsAdapter = new FriendAdapter(mFriends);
 
+        mRequestAdapter = new RequestAdapter(mRequests,
+                position -> {
+                    Friend friend = mRequests.get(position);
+                    String msg = "Friend accepted: " + friend.getUsername();
+                    Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
+                }, position -> {
+                    Friend friend = mRequests.get(position);
+                    String msg = "Friend declined: " + friend.getUsername();
+                    Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
+                });
+
         // Add line a line between each object in the recycler view list
         mRecyclerViewFriends.addItemDecoration(
                 new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
@@ -75,6 +90,7 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
         // Set adapters
         mRecyclerViewFriends.setAdapter(mFriendsAdapter);
+        mRecyclerViewRequests.setAdapter(mRequestAdapter);
 
         btnFriends.setOnClickListener(this);
         btnRequests.setOnClickListener(this);

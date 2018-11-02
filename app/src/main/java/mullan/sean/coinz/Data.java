@@ -23,6 +23,7 @@ public final class Data {
     public static final String COLLECTED   = "collected";
     public static final String RECEIVED    = "received";
     public static final String FRIENDS     = "friends";
+    public static final String REQUESTS    = "requests";
     public static final String DOLR        = "DOLR";
     public static final String QUID        = "QUID";
     public static final String SHIL        = "SHIL";
@@ -34,6 +35,7 @@ public final class Data {
     private static ArrayList<Coin>   mCollectedCoins;
     private static ArrayList<Coin>   mReceivedCoins;
     private static ArrayList<Friend> mFriends;
+    private static ArrayList<Friend> mRequests;
     private static int               mUncollectedCoinCount;
 
     /*
@@ -46,6 +48,7 @@ public final class Data {
         mCollectedCoins       = new ArrayList<>();
         mReceivedCoins        = new ArrayList<>();
         mFriends              = new ArrayList<>();
+        mRequests             = new ArrayList<>();
         mUncollectedCoinCount = 0;
     }
 
@@ -75,6 +78,13 @@ public final class Data {
      */
     public static ArrayList<Friend> getFriends() {
         return mFriends;
+    }
+
+    /*
+     *  @return  { ArrayList of users friend requests }
+     */
+    public static ArrayList<Friend> getRequests() {
+        return mRequests;
     }
 
     /*
@@ -229,6 +239,21 @@ public final class Data {
                         Log.d(TAG, "[retrieveAllFriends] failed to retrieve friends");
                     }
                     });
+    }
+
+    public static void retrieveAllRequests() {
+        Log.d(TAG, "[retrieveAllRequests] retrieving friend requests");
+        mUserDocRef.collection(REQUESTS).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            mRequests.add(documentToFriend(document));
+                        }
+                        Log.d(TAG, "[retrieveAllRequests] success");
+                    } else {
+                        Log.d(TAG, "[retrieveAllRequests] failed to retrieve friends");
+                    }
+                });
     }
 
     /*
