@@ -6,6 +6,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.util.ArrayList;
@@ -336,10 +337,57 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG,
-                                "[declineFriendRequest] successfully removed from requests: " + friendId);
+                        "[declineFriendRequest] successfully removed from requests: " + friendId);
                     } else {
                         Log.d(TAG,
-                                "[declineFriendRequest] failed to remove from requests: " + friendId);
+                        "[declineFriendRequest] failed to remove from requests: " + friendId);
+                    }
+                });
+    }
+
+    /*
+     *  @brief  { Performs query to locate user with the specified email address. When
+     *            located, the requester (this user) will be placed in the located users
+     *            "requests" subcollection }
+     */
+    public static void sendFriendRequest(String email, OnEventListener<String> event) {
+        // Perform query to find user with specified email address
+        mUsersRef.whereEqualTo("email", email).get()
+                .addOnCompleteListener(queryTask -> {
+
+                    if (queryTask.isSuccessful() && queryTask.getResult() != null) {
+                        QuerySnapshot result = queryTask.getResult();
+
+                        // If no documents are found, then inform user that the friend
+                        // request failed
+                        if (result.isEmpty()) {
+                            Log.d(TAG, "No users found");
+                            Exception e = new Exception("No users found");
+                            event.onFailure(e);
+
+                        // Otherwise, extract the details from the document (there will
+                        // always only be one document as user's emails are unique) and
+                        // place the current user in the located user's requests subcollection
+                        } else {
+                            String friendId = result.getDocuments().get(0).getId();
+                            String userId = mUserDocSnap.getId();
+                            String username = mUserDocSnap.getString("username");
+                            String userEmail = mUserDocSnap.getString("email");
+                            HashMap<String, Object> userMap = new HashMap<>();
+                            userMap.put("username", username);
+                            userMap.put("email", userEmail);
+                            mUsersRef.document(friendId).collection(REQUESTS).document(userId)
+                                    .set(userMap).addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    event.onSuccess("success");
+                                } else {
+                                    event.onFailure(task.getException());
+                                }
+
+                            });
+                        }
+                    } else {
+                        event.onFailure(queryTask.getException());
                     }
                 });
     }
