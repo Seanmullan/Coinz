@@ -42,6 +42,8 @@ public final class Data {
     private static ArrayList<Friend>   mFriends;
     private static ArrayList<Friend>   mRequests;
     private static int                 mUncollectedCoinCount;
+    private static int                 mFriendTransferCount;
+    private static int                 mBankTransferCount;
 
     /*
      *  @brief  { Initialise the document reference that will be used to identify
@@ -56,6 +58,8 @@ public final class Data {
         mFriends              = new ArrayList<>();
         mRequests             = new ArrayList<>();
         mUncollectedCoinCount = 0;
+        mFriendTransferCount  = 0;
+        mBankTransferCount    = 0;
     }
 
     public static void setUserDocSnap(DocumentSnapshot docSnap) {
@@ -391,6 +395,53 @@ public final class Data {
                     }
                 });
     }
+
+    /*
+     *  @brief  { Removes coin from the collection it currently exists in, then places coin
+     *            in the received subcollection of the specified friend. A random ID will be
+     *            generated for the coin document. This is to avoid duplicate coin ID's in the
+     *            case that two players send the same coin to a third player. Upon successful
+     *            completion of sending the coin, the method caller is provided with the number
+     *            of coins that have currently been transferred - this is so the caller can
+     *            identify when all coins have been transferred }
+     */
+    public static void sendCoinToFriend(Friend friend, Coin coin, String collection,
+                                        OnEventListener<Integer> event) {
+        // Remove coin from ArrayList
+        switch (collection) {
+            case COLLECTED:
+                mCollectedCoins.remove(coin);
+                break;
+            case RECEIVED:
+                mReceivedCoins.remove(coin);
+                break;
+            default:
+                Log.d(TAG, "[sendCoinToFriend] collection not recognised");
+                break;
+        }
+
+        // Remove coin from collection
+        mUserDocRef.collection(collection).document(coin.getId()).delete()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[sendCoinToFriend] successfully removed coin");
+                    } else {
+                        Log.d(TAG, "[sendCoinToFriend] failed to remove coin");
+                    }
+                });
+
+        // Add coin to friends received collection
+        mUsersRef.document(friend.getUserID()).collection(RECEIVED).add(coin.getCoinMap())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        event.onSuccess(++mFriendTransferCount);
+                    } else {
+                        event.onFailure(task.getException());
+                    }
+        });
+    }
+
+    public static void clearFriendTransferCount() { mFriendTransferCount = 0; }
 
     /*
      *  @brief  { Creates a coin object from the document data }

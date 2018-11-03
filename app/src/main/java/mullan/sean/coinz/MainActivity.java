@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, symbol, colour, location);
-            Data.addCoinToCollection(coin, Data.COLLECTED, new OnEventListener() {
+            Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d(TAG, "Coin successfully added with ID: " + id);

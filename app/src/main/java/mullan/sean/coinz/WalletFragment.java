@@ -1,7 +1,6 @@
 package mullan.sean.coinz;
 
 import android.app.AlertDialog;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -12,11 +11,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -31,6 +31,23 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     private CoinAdapter     mReceivedAdapter;
     private ArrayList<Coin> mCollectedCoins;
     private ArrayList<Coin> mReceivedCoins;
+    private Friend          mSelectedFriend;
+    private String          mSelectedTransfer;
+
+    /*  Flags to indicate if a transfer is in progress. These are required as the Data class
+     *  contains two static variables (one for friend transfer, one for bank) that indicate
+     *  how many have currently been transferred for a single transfer, so they would become
+     *  inaccurate if, for example, two friend transactions were occurring at the same time
+     */
+    private boolean mFriendTransferInProgress = false;
+    private boolean mBankTransferInProgress = false;
+
+    /*  These variables contain the total number of coins that have either successfully or
+     *  unsuccessfully been transferred in one transaction - they are used to identify when
+     *  to reset the flags described above
+     */
+    private int mFriendTransferTotal;
+    private int mBankTransferTotal;
 
     /*
      * @brief { Required empty public constructor }
@@ -56,13 +73,16 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         View view = inflater.inflate(R.layout.fragment_wallet, container, false);
 
+        // Retrieve local wallet data
         mCollectedCoins = Data.getCollectedCoins();
         mReceivedCoins  = Data.getReceivedCoins();
 
+        // Initialise buttons
         FloatingActionButton fabSend = view.findViewById(R.id.sendcoins);
         Button btnCollected = view.findViewById(R.id.btn_collected);
         Button btnReceived  = view.findViewById(R.id.btn_received);
 
+        // Initialise recycler views
         mRecyclerViewCol = view.findViewById(R.id.col_recycler_view);
         mRecyclerViewRec = view.findViewById(R.id.rec_recycler_view);
         mRecyclerViewRec.setVisibility(View.INVISIBLE);
@@ -71,7 +91,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         RecyclerView.LayoutManager mLayoutCol = new LinearLayoutManager(inflater.getContext());
         mRecyclerViewCol.setLayoutManager(mLayoutCol);
         RecyclerView.LayoutManager mLayoutRec = new LinearLayoutManager(inflater.getContext());
-        mRecyclerViewCol.setLayoutManager(mLayoutRec);
+        mRecyclerViewRec.setLayoutManager(mLayoutRec);
 
         // Initialise adapter with coins ArrayList
         mCollectedAdapter = new CoinAdapter(mCollectedCoins, inflater.getContext());
@@ -83,6 +103,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mRecyclerViewRec.addItemDecoration(
                 new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
 
+        // Set adapters
         mRecyclerViewCol.setAdapter(mCollectedAdapter);
         mRecyclerViewRec.setAdapter(mReceivedAdapter);
 
@@ -137,6 +158,11 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mReceivedAdapter.notifyDataSetChanged();
     }
 
+    /*
+     *  @brief  { Provides options for the user to transfer their selected coins to their
+     *            bank account or a friend. If a transfer is not currently in process,
+      *           then begin the transfer }
+     */
     private void openSendDialogue() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
         builder.setTitle("Transfer selected coins");
@@ -144,21 +170,46 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         // Provide options for user
         CharSequence[] options = {"To bank account", "To a friend"};
 
-        builder.setItems(options, (dialog, which) -> {
+        // Clear previously selected transfer
+        mSelectedTransfer = "";
+
+        // Set selected transfer
+        builder.setSingleChoiceItems(options, -1, (dialog, which) -> {
             switch(which) {
                 case 0:
-                    transferToBankAccount();
+                    mSelectedTransfer = "bank";
                     break;
                 case 1:
-                    transferToFriend();
+                    mSelectedTransfer = "friend";
                     break;
                 default:
-                    Log.d(TAG, "[openSendDialogue] option not recognised");
-            }
-        });
+                    Log.d(TAG, "[openSendDialogue] option not recognised: " + which);
+            }});
+
+        // Execute transfer if one is not already in progress
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            switch(mSelectedTransfer) {
+                case "bank":
+                    if(!mBankTransferInProgress) {
+                        transferToBankAccount();
+                    } else {
+                        displayToast("Please wait until current transfer completes");
+                    }
+                    break;
+                case "friend":
+                    if (!mFriendTransferInProgress) {
+                        friendTransfer();
+                    } else {
+                        displayToast("Please wait until current transfer completes");
+                    }
+                    break;
+                case "":
+                    displayToast("Please select a transfer option");
+                default:
+                    Log.d(TAG, "[openSendDialogue] transfer not recognised: " + mSelectedTransfer);
+            }});
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
         builder.show();
     }
 
@@ -170,18 +221,140 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private void transferToFriend() {
-        ArrayList<Coin> selectedCoins;
-        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
-            selectedCoins = getSelectedCoins(Data.COLLECTED);
-        } else {
-            selectedCoins = getSelectedCoins(Data.RECEIVED);
-        }
+    /*
+     *  @brief  { Opens a dialogue with the user to select the friend they wish to send
+     *            their selected coins to. The user is informed if the process was successful
+     *            or not and view will be updated if successful }
+     */
+    private void friendTransfer() {
+        // Clear the previously selected friend
+        mSelectedFriend = null;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
         builder.setTitle("Select friend");
+
+        // Retrieve friends
+        List<String> options = new ArrayList<>();
+        ArrayList<Friend> friends = Data.getFriends();
+        for (Friend f : friends) {
+            options.add(f.getUsername());
+        }
+
+        // Create array adapter of friends username's
+        ArrayAdapter arrayAdapter = new ArrayAdapter<>(
+                getLayoutInflater().getContext(),
+                android.R.layout.simple_list_item_single_choice,
+                options);
+
+        // Set selected friend
+        builder.setSingleChoiceItems(arrayAdapter, -1,
+                (dialog, which) -> mSelectedFriend = friends.get(which)
+        );
+
+        // Invoke method to send the selected coins to the selected friend
+        builder.setPositiveButton("OK",
+                ((dialog, which) -> {
+                    if (mSelectedFriend != null) {
+                        sendCoinsToFriend();
+                    } else {
+                        // No user has been selected
+                        displayToast("Please select a friend");
+                    }
+                }));
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
     }
 
+    /*
+     *  @brief  { Identifies all the selected coins and invokes a method in the Data class to
+     *            send each coin the the specified friend. The Data method returns the total
+     *            number of coins that have been successfully transferred so far, this number is
+     *            used to identify when the transfer has completed. The mFriendsTransferTotal
+     *            variable is used to count both successful and unsuccessful transfers - again to
+     *            identify when all coins have had an attempted transfer. These parameters are
+     *            cleared once the process has completed }
+     */
+    private void sendCoinsToFriend() {
+        ArrayList<Coin> selectedCoins;
+        String collection;
+        mFriendTransferTotal = 0;
+
+        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+            selectedCoins = getSelectedCoins(Data.COLLECTED);
+            collection    = Data.COLLECTED;
+        } else {
+            selectedCoins = getSelectedCoins(Data.RECEIVED);
+            collection    = Data.RECEIVED;
+        }
+
+        if (selectedCoins.size() == 0) {
+            displayToast("Please select coins to send");
+            return;
+        }
+
+        // Send selected coins to friend
+        mFriendTransferInProgress = true;
+        Log.d(TAG, "[sendCoinsToFriend] transfer in progress...");
+
+        for (Coin c : selectedCoins) {
+            Data.sendCoinToFriend(mSelectedFriend, c, collection,
+                    new OnEventListener<Integer>() {
+                        @Override
+                        public void onSuccess(Integer numberTransferred) {
+                            // If all coins have successfully been transferred, inform user and
+                            // reset transfer parameters
+                            Log.d(TAG, "[sendCoins] successfully sent coin: " + c.getId());
+
+                            if (numberTransferred == selectedCoins.size()) {
+                                displayToast("Successfully sent coins to "
+                                        + mSelectedFriend.getUsername());
+                                Data.clearFriendTransferCount();
+                                mFriendTransferInProgress = false;
+
+                                // Update the view
+                                if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+                                    updateCollectedView();
+                                } else {
+                                    updateReceivedView();
+                                }
+                                Log.d(TAG, "[sendCoinsToFriend] transfer complete");
+
+                            // Otherwise, increment the total count so far
+                            } else {
+                                mFriendTransferTotal++;
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+                            mFriendTransferTotal++;
+
+                            // If all coins have been attempted, then clear the transfer parameters
+                            if (mFriendTransferTotal == selectedCoins.size()) {
+                                Data.clearFriendTransferCount();
+                                mFriendTransferInProgress = false;
+                                Log.d(TAG, "[sendCoinsToFriend] transfer failed");
+
+                                // Update the view
+                                if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+                                    updateCollectedView();
+                                } else {
+                                    updateReceivedView();
+                                }
+                            } else {
+                                displayToast("Failed to send " + c.getCurrency()
+                                        + " worth " + c.getValue());
+                            }
+                            Log.d(TAG, "[sendCoins] failed to send coin: " + c.getId());
+                        }
+                    });
+        }
+    }
+
+    /*
+     *  @return  { Selected coins from given collection }
+     */
     private ArrayList<Coin> getSelectedCoins(String collection) {
         ArrayList<Coin> selectedCoins = new ArrayList<>();
         if (collection.equals(Data.COLLECTED)) {
@@ -198,6 +371,15 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
             }
         }
         return selectedCoins;
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
