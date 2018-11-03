@@ -15,9 +15,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
@@ -36,6 +39,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     private ArrayList<Coin> mReceivedCoins;
     private Friend          mSelectedFriend;
     private String          mSelectedTransfer;
+    private double          mGoldAmount;
 
     /*  Flags to indicate if a transfer is in progress. These are required as the Data class
      *  contains two static variables (one for friend transfer, one for bank) that indicate
@@ -47,7 +51,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
     /*  These variables contain the total number of coins that have either successfully or
      *  unsuccessfully been transferred in one transaction - they are used to identify when
-     *  to reset the flags described above
+     *  the transfer has finished
      */
     private int mFriendTransferTotal;
     private int mBankTransferTotal;
@@ -222,10 +226,97 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     }
 
     private void transferToBankAccount() {
+        ArrayList<Coin> selectedCoins;
+        String collection;
+        mGoldAmount = 0.0;
+        mBankTransferTotal = 0;
+
         if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
-           // TODO: get selected collected coins and transfer to bank
+            selectedCoins = getSelectedCoins(Data.COLLECTED);
+            collection    = Data.COLLECTED;
+            // Impose 25 coin limit
+            if (selectedCoins.size() > 25) {
+                displayToast("You cannot transfer more than 25 collected coins per day!");
+                return;
+            }
         } else {
-            // TODO: get received collected coins and transfer to bank
+            selectedCoins = getSelectedCoins(Data.RECEIVED);
+            collection    = Data.RECEIVED;
+        }
+
+        if (selectedCoins.size() == 0) {
+            displayToast("Please select coins to send");
+            return;
+        }
+
+        // Transfer selected coins to bank account
+        mBankTransferInProgress = true;
+        Log.d(TAG, "[transferToBankAccount] transfer in progress...");
+
+        for (Coin c : selectedCoins) {
+            double value    = c.getValue();
+            String currency = c.getCurrency();
+            double exchange = value * mExchangeRates.get(currency);
+            mGoldAmount += exchange;
+            Data.removeCoinFromCollection(c, collection, new OnEventListener<Integer>() {
+
+                @Override
+                public void onSuccess(Integer numberProcessed) {
+                    // If all coins have been processed
+                    if (numberProcessed == selectedCoins.size()) {
+
+                        // Get current date
+                        LocalDateTime now = LocalDateTime.now();
+                        DateTimeFormatter format = DateTimeFormatter.ofPattern(
+                                "yyyy/MM/dd", Locale.ENGLISH);
+                        String date = format.format(now);
+
+                        // Add transaction to firebase
+                        Transaction transaction = new Transaction(mGoldAmount, date);
+                        Data.addTransaction(transaction);
+
+                        // Clear transfer parameters
+                        Data.clearBankTransferCount();
+                        mBankTransferInProgress = false;
+
+                        // Update the view
+                        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+                            updateCollectedView();
+                        } else {
+                            updateReceivedView();
+                        }
+                        Log.d(TAG, "[sendCoinsToFriend] transfer complete");
+                        displayToast("Transfer complete");
+                    } else {
+                        mBankTransferTotal++;
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    mBankTransferTotal++;
+                    // If all coins have been processed
+                    if (mBankTransferTotal == selectedCoins.size()) {
+
+                        // Clear transfer parameters
+                        Data.clearBankTransferCount();
+                        mBankTransferInProgress = false;
+                        Log.d(TAG, "[transferToBankAccount] transfer failed");
+
+                        // Update the view
+                        if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
+                            updateCollectedView();
+                        } else {
+                            updateReceivedView();
+                        }
+
+                    } else {
+                        displayToast("Failed to transfer " + c.getCurrency()
+                                + " worth " + c.getValue());
+                    }
+                    Log.d(TAG, "[sendCoins] failed to transfer coin: " + c.getId());
+                }
+            });
         }
     }
 
@@ -350,6 +441,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                 } else {
                                     updateReceivedView();
                                 }
+
                             } else {
                                 displayToast("Failed to send " + c.getCurrency()
                                         + " worth " + c.getValue());

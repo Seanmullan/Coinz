@@ -294,9 +294,9 @@ public class MapFragment extends Fragment implements
         displayToast(msg);
         map.removeMarker(mMarkers.get(coin));
         mUncollectedCoins.remove(coin);
-        Data.removeCoinFromCollection(coin, Data.UNCOLLECTED, new OnEventListener<String>() {
+        Data.removeCoinFromCollection(coin, Data.UNCOLLECTED, new OnEventListener<Integer>() {
             @Override
-            public void onSuccess(String object) {
+            public void onSuccess(Integer object) {
                 Log.d(TAG,
                 "[collectCoin] successfully removed coin from Uncollected with id: " + coin.getId());
             }

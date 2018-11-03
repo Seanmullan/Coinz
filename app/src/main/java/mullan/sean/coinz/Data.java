@@ -22,16 +22,17 @@ public final class Data {
      *  the firebase database
      */
 
-    public static final String UNCOLLECTED = "uncollected";
-    public static final String COLLECTED   = "collected";
-    public static final String RECEIVED    = "received";
-    public static final String FRIENDS     = "friends";
-    public static final String REQUESTS    = "requests";
-    public static final String DOLR        = "DOLR";
-    public static final String QUID        = "QUID";
-    public static final String SHIL        = "SHIL";
-    public static final String PENY        = "PENY";
-    private static final String TAG        = "C_DATA";
+    public static final String UNCOLLECTED  = "uncollected";
+    public static final String COLLECTED    = "collected";
+    public static final String RECEIVED     = "received";
+    public static final String FRIENDS      = "friends";
+    public static final String REQUESTS     = "requests";
+    public static final String TRANSACTIONS = "transactions";
+    public static final String DOLR         = "DOLR";
+    public static final String QUID         = "QUID";
+    public static final String SHIL         = "SHIL";
+    public static final String PENY         = "PENY";
+    private static final String TAG         = "C_DATA";
 
     private static CollectionReference    mUsersRef;
     private static DocumentReference      mUserDocRef;
@@ -42,6 +43,7 @@ public final class Data {
     private static ArrayList<Coin>        mReceivedCoins;
     private static ArrayList<Friend>      mFriends;
     private static ArrayList<Friend>      mRequests;
+    private static double                 mGoldAmount;
     private static int                    mUncollectedCoinCount;
     private static int                    mFriendTransferCount;
     private static int                    mBankTransferCount;
@@ -59,6 +61,7 @@ public final class Data {
         mReceivedCoins        = new ArrayList<>();
         mFriends              = new ArrayList<>();
         mRequests             = new ArrayList<>();
+        mGoldAmount           = 0;
         mUncollectedCoinCount = 0;
         mFriendTransferCount  = 0;
         mBankTransferCount    = 0;
@@ -67,6 +70,10 @@ public final class Data {
     public static void setUserDocSnap(DocumentSnapshot docSnap) { mUserDocSnap = docSnap; }
 
     public static HashMap<String,Double> getRates() { return mExchangeRates; }
+
+    public static double getGoldAmount() { return mGoldAmount; }
+
+    public static void setGoldAmount(double gold) { mGoldAmount = gold; }
 
     public static ArrayList<Coin> getUncollectedCoins() {
         return mUncollectedCoins;
@@ -87,6 +94,10 @@ public final class Data {
     public static ArrayList<Friend> getRequests() {
         return mRequests;
     }
+
+    public static void clearFriendTransferCount() { mFriendTransferCount = 0; }
+
+    public static void clearBankTransferCount() { mBankTransferCount = 0; }
 
     /*
      *  @brief  { Sets exchange rates HashMap and uploads rates data to firebase }
@@ -232,11 +243,13 @@ public final class Data {
     /*
      *  @brief  { Removes the document corresponding to the coin argument in the specified
      *            collection, and the coin is also removed from the corresponding ArrayList.
-     *            The caller is notified if the procedure was a success or failure }
+     *            The caller is notified when the procedure has finished. This method returns
+     *            the number of coins that have been removed from a collection for a bank
+     *            transfer, however only the Wallet fragment will use this number }
      */
     public static void removeCoinFromCollection(Coin coin,
                                                 final String collection,
-                                                OnEventListener<String> event) {
+                                                OnEventListener<Integer> event) {
         Log.d(TAG,  "[removeCoinFromCollection] removing coin from " + collection);
         // Remove coin from appropriate ArrayList
         switch (collection) {
@@ -256,13 +269,12 @@ public final class Data {
         mUserDocRef.collection(collection).document(coin.getId()).delete()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "COIN REMOVED");
-                        event.onSuccess("success");
+                        Log.d(TAG, "[removeCoinFromCollection] removed coin " + coin.getId());
+                        event.onSuccess(++mBankTransferCount);
                     } else {
                         event.onFailure(task.getException());
                     }
         });
-        event.onSuccess("success");
     }
 
     /*
@@ -432,28 +444,13 @@ public final class Data {
      */
     public static void sendCoinToFriend(Friend friend, Coin coin, String collection,
                                         OnEventListener<Integer> event) {
-        // Remove coin from ArrayList
-        switch (collection) {
-            case COLLECTED:
-                mCollectedCoins.remove(coin);
-                break;
-            case RECEIVED:
-                mReceivedCoins.remove(coin);
-                break;
-            default:
-                Log.d(TAG, "[sendCoinToFriend] collection not recognised");
-                break;
-        }
 
-        // Remove coin from collection
-        mUserDocRef.collection(collection).document(coin.getId()).delete()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "[sendCoinToFriend] successfully removed coin");
-                    } else {
-                        Log.d(TAG, "[sendCoinToFriend] failed to remove coin");
-                    }
-                });
+        removeCoinFromCollection(coin, collection, new OnEventListener<Integer>() {
+            @Override
+            public void onSuccess(Integer object) {}
+            @Override
+            public void onFailure(Exception e) {}
+        });
 
         // Add coin to friends received collection
         mUsersRef.document(friend.getUserID()).collection(RECEIVED).add(coin.getCoinMap())
@@ -466,7 +463,25 @@ public final class Data {
         });
     }
 
-    public static void clearFriendTransferCount() { mFriendTransferCount = 0; }
+    public static void addTransaction(Transaction transaction) {
+        mGoldAmount += transaction.getGoldAdded();
+        mUserDocRef.update("gold", mGoldAmount)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[addTransaction] gold updated");
+                    } else {
+                        Log.d(TAG, "[addTransaction] failed to update gold");
+                    }
+                });
+        mUserDocRef.collection(TRANSACTIONS).add(transaction.getTransactionMap())
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[addTransaction] transaction added");
+                    } else {
+                        Log.d(TAG, "[addTransaction] failed to add transaction");
+                    }
+                });
+    }
 
     /*
      *  @brief  { Creates a coin object from the document data }

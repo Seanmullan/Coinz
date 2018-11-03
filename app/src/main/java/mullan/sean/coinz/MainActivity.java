@@ -163,16 +163,18 @@ public class MainActivity extends AppCompatActivity {
         CollectionReference collRef = mFirestore.collection("users");
         Data.init(docRef, collRef);
         docRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
+            if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                if (document != null) {
-                    // Initialise user document reference and retrieve map data
-                    mUserDoc = document;
-                    Data.setUserDocSnap(document);
-                    populateData();
+                // Initialise user document reference and retrieve map data
+                mUserDoc = document;
+                Data.setUserDocSnap(document);
+                Double gold = document.getDouble("gold");
+                if (gold != null) {
+                    Data.setGoldAmount(gold);
                 } else {
-                    Log.d(TAG, "Failed to retrieve user document with ID " + uid);
+                    Log.d(TAG, "[getUserDocument] gold is null");
                 }
+                populateData();
             } else {
                 Log.d(TAG, "User document get failed with ", task.getException());
             }
