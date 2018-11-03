@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -24,6 +25,8 @@ import javax.annotation.Nonnull;
 public class WalletFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_WALLET";
+
+    private static HashMap<String,Double> mExchangeRates;
 
     private RecyclerView    mRecyclerViewCol;
     private RecyclerView    mRecyclerViewRec;
@@ -73,7 +76,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         View view = inflater.inflate(R.layout.fragment_wallet, container, false);
 
-        // Retrieve local wallet data
+        // Retrieve data
+        mExchangeRates  = Data.getRates();
         mCollectedCoins = Data.getCollectedCoins();
         mReceivedCoins  = Data.getReceivedCoins();
 
@@ -112,6 +116,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         btnReceived.setOnClickListener(this);
 
         return view;
+    }
+
+    public static void updateRates() {
+        mExchangeRates = Data.getRates();
     }
 
     /*

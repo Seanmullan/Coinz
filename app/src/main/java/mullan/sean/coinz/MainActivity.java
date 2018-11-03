@@ -22,6 +22,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
 
 import org.json.*;
@@ -182,9 +183,11 @@ public class MainActivity extends AppCompatActivity {
      *  @brief  { This procedure will prompt the data class to pull in the appropriate
      *            data from firebase and populate the relevant fields in the Data class.
      *
-     *            We want to retrieve existing data if a new day has not begun. This case
-     *            arises if the user closes the app and reopens it on the same day, then
-     *            we want to fetch the users uncollected, collected and received coins.
+     *            We want to retrieve existing data in all cases (that is, either it is the
+     *            same day or a new day has begun). If it is the same day, then we use the
+     *            retrieved existing data to populate the Data class. If it is a new day,
+     *            then we use the existing data to identify what documents need to be deleted
+     *            in firebase (i.e. for clearing the local wallet)
      *
      *            If a new day has begun, then we want to execute the following steps:
      *              1) Update the last saved date for the user on firebase
@@ -196,9 +199,9 @@ public class MainActivity extends AppCompatActivity {
      *
      *            When these processes are completed, the Map Fragment is prompted to
      *            retrieve the most up to date data from the Data class.
-      *
-      *           Note: We have to retrieve the existing data regardless, as the ID's
-      *           are required in order to identify which coins we want to remove }
+     *
+     *           Note: We have to retrieve the existing data regardless, as the ID's
+     *           are required in order to identify which coins we want to remove }
      */
     @SuppressWarnings("unchecked")
     private void populateData() {
@@ -208,6 +211,22 @@ public class MainActivity extends AppCompatActivity {
         if (lastSavedDate == null || currentDate == null) {
             Log.d(TAG, "Saved date or current date is null");
             return;
+        }
+
+        // If a new day has not begun, then retrieve the existing exchange rates. If a new
+        // day has begun, then the new exchange rates will be retrieved when retrieveNewMapData()
+        // is called
+        if (currentDate.equals(lastSavedDate)) {
+            Data.retrieveExchangeRates(new OnEventListener<String>() {
+                @Override
+                public void onSuccess(String object) {
+                    WalletFragment.updateRates();
+                }
+                @Override
+                public void onFailure(Exception e) {
+                    Log.d(TAG, "Failed to retrieve exchange rates with exception ", e);
+                }
+            });
         }
 
         // Retrieve all uncollected coins, and use this data to remove these coins if
@@ -229,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve uncollected coins with exception ", e);
             }
         });
+
         // Retrieve all collected coins. Again, use this data to remove these coins if a
         // new day has begun
         Data.retrieveAllCoinsFromCollection(Data.COLLECTED, new OnEventListener<String>() {
@@ -244,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve collected coins with exception ", e);
             }
         });
+
         //Retrieve all received coins, and remove them if a new day has begun
         Data.retrieveAllCoinsFromCollection(Data.RECEIVED, new OnEventListener<String>() {
             @Override
@@ -258,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve received coins with exception ", e);
             }
         });
+
         // Retrieve the users friends and friend requests
         Data.retrieveAllFriends();
         Data.retrieveAllRequests();
@@ -271,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
     private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
-        String url = mapUrl + "2018/10/29" + mapJson;
+        String url = mapUrl + getCurrentDate() + mapJson;
         DownloadFileTask downloadTask = new DownloadFileTask(new OnEventListener<String>() {
             @Override
             public void onSuccess(String result) {
@@ -310,6 +332,14 @@ public class MainActivity extends AppCompatActivity {
         JSONObject mapData = new JSONObject(json);
         mExchangeRates     = mapData.getJSONObject("rates");
         mCoinData          = mapData.getJSONArray("features");
+
+        HashMap<String,Double> rates = new HashMap<>();
+        rates.put("SHIL", mExchangeRates.getDouble("SHIL"));
+        rates.put("DOLR", mExchangeRates.getDouble("DOLR"));
+        rates.put("QUID", mExchangeRates.getDouble("QUID"));
+        rates.put("PENY", mExchangeRates.getDouble("PENY"));
+
+        Data.setRates(rates);
 
         for (int i = 0; i < mCoinData.length(); i++) {
             // Extract json data

@@ -33,17 +33,18 @@ public final class Data {
     public static final String PENY        = "PENY";
     private static final String TAG        = "C_DATA";
 
-    private static CollectionReference mUsersRef;
-    private static DocumentReference   mUserDocRef;
-    private static DocumentSnapshot    mUserDocSnap;
-    private static ArrayList<Coin>     mUncollectedCoins;
-    private static ArrayList<Coin>     mCollectedCoins;
-    private static ArrayList<Coin>     mReceivedCoins;
-    private static ArrayList<Friend>   mFriends;
-    private static ArrayList<Friend>   mRequests;
-    private static int                 mUncollectedCoinCount;
-    private static int                 mFriendTransferCount;
-    private static int                 mBankTransferCount;
+    private static CollectionReference    mUsersRef;
+    private static DocumentReference      mUserDocRef;
+    private static DocumentSnapshot       mUserDocSnap;
+    private static HashMap<String,Double> mExchangeRates;
+    private static ArrayList<Coin>        mUncollectedCoins;
+    private static ArrayList<Coin>        mCollectedCoins;
+    private static ArrayList<Coin>        mReceivedCoins;
+    private static ArrayList<Friend>      mFriends;
+    private static ArrayList<Friend>      mRequests;
+    private static int                    mUncollectedCoinCount;
+    private static int                    mFriendTransferCount;
+    private static int                    mBankTransferCount;
 
     /*
      *  @brief  { Initialise the document reference that will be used to identify
@@ -52,6 +53,7 @@ public final class Data {
     public static void init(DocumentReference docRef, CollectionReference collRef) {
         mUsersRef             = collRef;
         mUserDocRef           = docRef;
+        mExchangeRates        = new HashMap<>();
         mUncollectedCoins     = new ArrayList<>();
         mCollectedCoins       = new ArrayList<>();
         mReceivedCoins        = new ArrayList<>();
@@ -62,44 +64,67 @@ public final class Data {
         mBankTransferCount    = 0;
     }
 
-    public static void setUserDocSnap(DocumentSnapshot docSnap) {
-        mUserDocSnap = docSnap;
-    }
+    public static void setUserDocSnap(DocumentSnapshot docSnap) { mUserDocSnap = docSnap; }
 
-    /*
-     *  @return  { ArrayList of uncollected coins }
-     */
+    public static HashMap<String,Double> getRates() { return mExchangeRates; }
+
     public static ArrayList<Coin> getUncollectedCoins() {
         return mUncollectedCoins;
     }
 
-    /*
-     *  @return  { ArrayList of collected coins }
-     */
     public static ArrayList<Coin> getCollectedCoins() {
         return mCollectedCoins;
     }
 
-    /*
-     *  @return  { ArrayList of received coins }
-     */
     public static ArrayList<Coin> getReceivedCoins() {
         return mReceivedCoins;
     }
 
-    /*
-     *  @return  { ArrayList of users friends }
-     */
     public static ArrayList<Friend> getFriends() {
         return mFriends;
     }
 
-    /*
-     *  @return  { ArrayList of users friend requests }
-     */
     public static ArrayList<Friend> getRequests() {
         return mRequests;
     }
+
+    /*
+     *  @brief  { Sets exchange rates HashMap and uploads rates data to firebase }
+     */
+    public static void setRates(HashMap<String,Double> rates) {
+        mExchangeRates = rates;
+        mUsersRef.document("rates").set(rates)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[setRates] successful");
+                    } else {
+                        Log.d(TAG, "[setRates] failed");
+                    }
+                });
+    }
+
+    /*
+     *  @brief  { Retrieves rates data from firebase and sets the exchange rates
+     *            HashMap, and informs caller of success or failure }
+     */
+    public static void retrieveExchangeRates(OnEventListener<String> event) {
+        mUsersRef.document("rates").get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        Log.d(TAG, "[retrieveExchangeRates] success");
+                        DocumentSnapshot doc = task.getResult();
+                        mExchangeRates.put("SHIL", doc.getDouble("SHIL"));
+                        mExchangeRates.put("DOLR", doc.getDouble("DOLR"));
+                        mExchangeRates.put("QUID", doc.getDouble("QUID"));
+                        mExchangeRates.put("PENY", doc.getDouble("PENY"));
+                        event.onSuccess("success");
+                    } else {
+                        Log.d(TAG, "[retrieveExchangeRates] failed");
+                        event.onFailure(task.getException());
+                    }
+                });
+    }
+
 
     /*
      *  @brief  { This procedure fetches all documents within the specified collection
