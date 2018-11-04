@@ -173,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Log.d(TAG, "[getUserDocument] gold is null");
                 }
+                Double transferred = document.getDouble("collectedTransferred");
+                if (transferred != null) {
+                    Data.setCollectedTransferred(transferred.intValue());
+                }
                 populateData();
             } else {
                 Log.d(TAG, "User document get failed with ", task.getException());
@@ -232,13 +236,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Retrieve all uncollected coins, and use this data to remove these coins if
         // a new day has begun. Then prompt the application to retrieve new data if it
-        // is a new day
+        // is a new day. Also, if a new day has begun, update the date and reset the
+        // variable that stores the number of collected coins that the user has transferred
+        // into their bank account for that day
         Data.retrieveAllCoinsFromCollection(Data.UNCOLLECTED, new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved uncollected coins");
                 if (!currentDate.equals(lastSavedDate)) {
                     Data.updateDate(getCurrentDate());
+                    Data.clearCollectedTransferred();
                     Data.clearAllCoinsFromCollection(Data.UNCOLLECTED);
                     retrieveNewMapData();
                 }
@@ -357,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, location);
-            Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
+            Data.addCoinToCollection(coin, Data.COLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d(TAG, "Coin successfully added with ID: " + id);

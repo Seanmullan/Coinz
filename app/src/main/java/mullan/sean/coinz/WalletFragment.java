@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     private ArrayList<Coin> mReceivedCoins;
     private Friend          mSelectedFriend;
     private String          mSelectedTransfer;
+    private ProgressBar     mProgressBar;
     private double          mGoldAmount;
 
     /*  Flags to indicate if a transfer is in progress. These are required as the Data class
@@ -81,14 +83,15 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         View view = inflater.inflate(R.layout.fragment_wallet, container, false);
 
         // Retrieve data
-        mExchangeRates  = Data.getRates();
-        mCollectedCoins = Data.getCollectedCoins();
-        mReceivedCoins  = Data.getReceivedCoins();
+        mExchangeRates        = Data.getRates();
+        mCollectedCoins       = Data.getCollectedCoins();
+        mReceivedCoins        = Data.getReceivedCoins();
 
-        // Initialise buttons
+        // Initialise buttons and progress bar
         FloatingActionButton fabSend = view.findViewById(R.id.sendcoins);
         Button btnCollected = view.findViewById(R.id.btn_collected);
         Button btnReceived  = view.findViewById(R.id.btn_received);
+        mProgressBar = view.findViewById(R.id.progressBar);
 
         // Initialise recycler views
         mRecyclerViewCol = view.findViewById(R.id.col_recycler_view);
@@ -246,7 +249,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
             selectedCoins = getSelectedCoins(Data.COLLECTED);
             collection    = Data.COLLECTED;
             // Impose 25 coin limit
-            if (selectedCoins.size() > 25) {
+            if (selectedCoins.size() > (25 - Data.getCollectedTransferred())) {
                 displayToast("You cannot transfer more than 25 collected coins per day!");
                 return;
             }
@@ -262,6 +265,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         // Transfer selected coins to bank account
         mBankTransferInProgress = true;
+        mProgressBar.setVisibility(View.VISIBLE);
         Log.d(TAG, "[transferToBankAccount] transfer in progress...");
 
         for (Coin c : selectedCoins) {
@@ -284,7 +288,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
                         // Add transaction to firebase
                         Transaction transaction = new Transaction(mGoldAmount, date);
-                        Data.addTransaction(transaction);
+                        Data.addTransaction(transaction, numberProcessed, collection);
 
                         // Clear transfer parameters
                         Data.clearBankTransferCount();
@@ -296,6 +300,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         } else {
                             updateReceivedView();
                         }
+                        mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "[sendCoinsToFriend] transfer complete");
                         displayToast("Transfer complete");
                     } else {
@@ -312,6 +317,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         // Clear transfer parameters
                         Data.clearBankTransferCount();
                         mBankTransferInProgress = false;
+                        mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "[transferToBankAccount] transfer failed");
 
                         // Update the view
@@ -405,6 +411,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         // Send selected coins to friend
         mFriendTransferInProgress = true;
+        mProgressBar.setVisibility(View.VISIBLE);
         Log.d(TAG, "[sendCoinsToFriend] transfer in progress...");
 
         for (Coin c : selectedCoins) {
@@ -417,10 +424,11 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                             Log.d(TAG, "[sendCoins] successfully sent coin: " + c.getId());
 
                             if (numberTransferred == selectedCoins.size()) {
-                                displayToast("Successfully sent coins to "
-                                        + mSelectedFriend.getUsername());
+
+                                // Clear transfer parameters
                                 Data.clearFriendTransferCount();
                                 mFriendTransferInProgress = false;
+                                mProgressBar.setVisibility(View.INVISIBLE);
 
                                 // Update the view
                                 if (mRecyclerViewCol.getVisibility() == View.VISIBLE) {
@@ -428,6 +436,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                 } else {
                                     updateReceivedView();
                                 }
+                                displayToast("Successfully sent coins to "
+                                        + mSelectedFriend.getUsername());
                                 Log.d(TAG, "[sendCoinsToFriend] transfer complete");
 
                             // Otherwise, increment the total count so far
@@ -444,6 +454,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                             if (mFriendTransferTotal == selectedCoins.size()) {
                                 Data.clearFriendTransferCount();
                                 mFriendTransferInProgress = false;
+                                mProgressBar.setVisibility(View.INVISIBLE);
                                 Log.d(TAG, "[sendCoinsToFriend] transfer failed");
 
                                 // Update the view

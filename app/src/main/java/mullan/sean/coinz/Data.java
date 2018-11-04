@@ -45,6 +45,7 @@ public final class Data {
     private static ArrayList<Friend>      mRequests;
     private static ArrayList<Transaction> mTransactions;
     private static double                 mGoldAmount;
+    private static int                    mCollectedTransferred;
     private static int                    mUncollectedCoinCount;
     private static int                    mFriendTransferCount;
     private static int                    mBankTransferCount;
@@ -64,18 +65,35 @@ public final class Data {
         mRequests             = new ArrayList<>();
         mTransactions         = new ArrayList<>();
         mGoldAmount           = 0;
+        mCollectedTransferred = 0;
         mUncollectedCoinCount = 0;
         mFriendTransferCount  = 0;
         mBankTransferCount    = 0;
     }
 
-    public static void setUserDocSnap(DocumentSnapshot docSnap) { mUserDocSnap = docSnap; }
+    public static void setUserDocSnap(DocumentSnapshot docSnap) {
+        mUserDocSnap = docSnap;
+    }
 
-    public static HashMap<String,Double> getRates() { return mExchangeRates; }
+    public static HashMap<String,Double> getRates() {
+        return mExchangeRates;
+    }
 
-    public static double getGoldAmount() { return mGoldAmount; }
+    public static double getGoldAmount() {
+        return mGoldAmount;
+    }
 
-    public static void setGoldAmount(double gold) { mGoldAmount = gold; }
+    public static void setGoldAmount(double gold) {
+        mGoldAmount = gold;
+    }
+
+    public static void setCollectedTransferred(int transferred) {
+        mCollectedTransferred = transferred;
+    }
+
+    public static int getCollectedTransferred() {
+        return mCollectedTransferred;
+    }
 
     public static ArrayList<Coin> getUncollectedCoins() {
         return mUncollectedCoins;
@@ -97,11 +115,17 @@ public final class Data {
         return mRequests;
     }
 
-    public static ArrayList<Transaction> getTransactions() { return mTransactions; }
+    public static ArrayList<Transaction> getTransactions() {
+        return mTransactions;
+    }
 
-    public static void clearFriendTransferCount() { mFriendTransferCount = 0; }
+    public static void clearFriendTransferCount() {
+        mFriendTransferCount = 0;
+    }
 
-    public static void clearBankTransferCount() { mBankTransferCount = 0; }
+    public static void clearBankTransferCount() {
+        mBankTransferCount = 0;
+    }
 
     /*
      *  @brief  { Sets exchange rates HashMap and uploads rates data to firebase }
@@ -114,6 +138,18 @@ public final class Data {
                         Log.d(TAG, "[setRates] successful");
                     } else {
                         Log.d(TAG, "[setRates] failed");
+                    }
+                });
+    }
+
+    public static void clearCollectedTransferred() {
+        mCollectedTransferred = 0;
+        mUserDocRef.update("collectedTransferred", 0)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[clearCollectedTransferred] success");
+                    } else {
+                        Log.d(TAG, "[clearCollectedTransferred] success");
                     }
                 });
     }
@@ -488,13 +524,28 @@ public final class Data {
     }
 
     /*
-     *  @brief  { Adds the value of gold from the transaction to the current value of gold,
-     *            then updates this value on the users document. The transaction object is
-     *            then added to the users transactions subcollection }
+     *  @brief  { Updates the number of collected coins that the user has transferred into their
+     *            bank account for the current day, adds the value of gold from the transaction
+     *            to the current value of gold, then updates this value on the users document. The
+     *            transaction object is then added to the users transactions subcollection }
      */
-    public static void addTransaction(Transaction transaction) {
+    public static void addTransaction(Transaction transaction, int numberProcessed,
+                                      String collection) {
         mGoldAmount += transaction.getGoldAdded();
+        if (collection.equals(COLLECTED)) {
+            mCollectedTransferred += numberProcessed;
+        }
         mTransactions.add(transaction);
+
+        mUserDocRef.update("collectedTransferred", mCollectedTransferred)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[addTransaction] collected transferred updated");
+                    } else {
+                        Log.d(TAG, "[addTransaction] failed to collected transferred");
+                    }
+                });
+
         mUserDocRef.update("gold", mGoldAmount)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {

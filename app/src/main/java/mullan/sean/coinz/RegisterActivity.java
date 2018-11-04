@@ -133,6 +133,7 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("email", email);
         userData.put("gold", 0);
         userData.put("lastSavedDate", "");
+        userData.put("collectedTransferred", 0);
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             String uid = user.getUid();
