@@ -321,6 +321,11 @@ public final class Data {
                 });
     }
 
+    /*
+     *  @brief  { Retrieves all documents in the users transactions subcollection,
+     *            then creates a Transaction object for each document and stoes
+     *            the objects in an ArrayList }
+     */
     public static void retrieveAllTransactions() {
         Log.d(TAG, "[retrieveAllTransactions] retrieving transactions");
         mUserDocRef.collection(TRANSACTIONS).get()
@@ -539,6 +544,11 @@ public final class Data {
         return new Friend(uid, username, email);
     }
 
+    /*
+     *  @brief  { Creates a transaction object from the document data }
+     *
+     *  @return { Transaction object }
+     */
     private static Transaction documentToTransaction(QueryDocumentSnapshot doc) {
         Map<String, Object> transData = doc.getData();
         String date = (String) transData.get("date");
