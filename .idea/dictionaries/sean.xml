@@ -1,10 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="sean">
     <words>
+      <w>coinzmap</w>
       <w>coords</w>
       <w>dolr</w>
       <w>firebase</w>
       <w>firestore</w>
+      <w>geojson</w>
       <w>mapbox</w>
       <w>peny</w>
       <w>requestadapter</w>

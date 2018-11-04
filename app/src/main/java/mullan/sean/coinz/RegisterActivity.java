@@ -2,7 +2,6 @@ package mullan.sean.coinz;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -12,11 +11,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -58,27 +52,19 @@ public class RegisterActivity extends AppCompatActivity {
         Button btnRegister = findViewById(R.id.btn_register);
         Button btnLogin    = findViewById(R.id.btn_already_member);
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btnRegister.setOnClickListener(v -> {
 
-                String username = mFieldUsername.getText().toString().trim();
-                String email    = mFieldEmail.getText().toString().trim();
-                String password = mFieldPassword.getText().toString().trim();
+            String username = mFieldUsername.getText().toString().trim();
+            String email    = mFieldEmail.getText().toString().trim();
+            String password = mFieldPassword.getText().toString().trim();
 
-                // Check validity of user entered details. Create account if valid
-                if (detailsValid(username, email, password)) {
-                    createUserAccount(username, email, password);
-                }
+            // Check validity of user entered details. Create account if valid
+            if (detailsValid(username, email, password)) {
+                createUserAccount(username, email, password);
             }
         });
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                proceedToActivity(LoginActivity.class);
-            }
-        });
+        btnLogin.setOnClickListener(v -> proceedToActivity(LoginActivity.class));
     }
 
     /*
@@ -122,20 +108,16 @@ public class RegisterActivity extends AppCompatActivity {
     private void createUserAccount(final String username, final String email, String password) {
         mProgressBar.setVisibility(View.VISIBLE);
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
-
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            displayToast(getString(R.string.registration_success));
-                            addUserToDatabase(username, email);
-                            proceedToActivity(MainActivity.class);
-                            finish();
-                        } else {
-                            displayToast(getString(R.string.registration_fail) + task.getException());
-                        }
-                        mProgressBar.setVisibility(View.GONE);
+                .addOnCompleteListener(RegisterActivity.this, task -> {
+                    if (task.isSuccessful()) {
+                        displayToast(getString(R.string.registration_success));
+                        addUserToDatabase(username, email);
+                        proceedToActivity(MainActivity.class);
+                        finish();
+                    } else {
+                        displayToast(getString(R.string.registration_fail) + task.getException());
                     }
+                    mProgressBar.setVisibility(View.GONE);
                 });
     }
 
@@ -155,18 +137,8 @@ public class RegisterActivity extends AppCompatActivity {
         if (user != null) {
             String uid = user.getUid();
             mFirestore.collection("users").document(uid).set(userData)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "Document successfully added");
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "Error adding document", e);
-                        }
-                    });
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Document successfully added"))
+                    .addOnFailureListener(e -> Log.d(TAG, "Error adding document", e));
         } else {
             displayToast(getString(R.string.user_null_pointer));
         }

@@ -1,6 +1,5 @@
 package mullan.sean.coinz;
 
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -10,8 +9,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ResetPasswordActivity extends AppCompatActivity {
@@ -41,24 +38,16 @@ public class ResetPasswordActivity extends AppCompatActivity {
         Button btnBack  = findViewById(R.id.btn_back);
 
         // Reset password if email field is filled
-        btnReset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String email = mInputEmail.getText().toString().trim();
-                if (TextUtils.isEmpty(email)) {
-                    displayToast(getString(R.string.reset_email));
-                } else {
-                    resetPassword(email);
-                }
+        btnReset.setOnClickListener(v -> {
+            String email = mInputEmail.getText().toString().trim();
+            if (TextUtils.isEmpty(email)) {
+                displayToast(getString(R.string.reset_email));
+            } else {
+                resetPassword(email);
             }
         });
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        btnBack.setOnClickListener(v -> finish());
     }
 
     /*
@@ -69,16 +58,13 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private void resetPassword(String email) {
         mProgressBar.setVisibility(View.VISIBLE);
         mAuth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            displayToast(getString(R.string.password_reset_msg));
-                        } else {
-                            displayToast(getString(R.string.password_reset_failed));
-                        }
-                        mProgressBar.setVisibility(View.GONE);
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        displayToast(getString(R.string.password_reset_msg));
+                    } else {
+                        displayToast(getString(R.string.password_reset_failed));
                     }
+                    mProgressBar.setVisibility(View.GONE);
                 });
     }
 

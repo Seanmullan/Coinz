@@ -12,9 +12,15 @@ public class Friend {
         this.mEmail    = email;
     }
 
-    public String getUserID() { return mUserId; }
+    public String getUserID() {
+        return mUserId;
+    }
 
-    public String getUsername() { return mUsername; }
+    public String getUsername() {
+        return mUsername;
+    }
 
-    public String getEmail() { return mEmail; }
+    public String getEmail() {
+        return mEmail;
+    }
 }

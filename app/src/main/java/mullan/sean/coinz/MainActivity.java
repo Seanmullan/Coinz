@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore mFirestore;
     private DocumentSnapshot  mUserDoc;
     private FirebaseAuth      mAuth;
-    private JSONObject        mExchangeRates;
     private JSONArray         mCoinData;
 
     /*
@@ -72,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Create firebase authentication listener
         mAuthListener = firebaseAuth -> {
-            FirebaseUser user1 = firebaseAuth.getCurrentUser();
-            if (user1 == null) {
+            if (mAuth.getCurrentUser() == null) {
                 // user auth state is changed - user is null
+                Log.d(TAG, "[onCreate] User is null");
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 finish();
             }
@@ -282,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Retrieve the users friends and friend requests
+        // Retrieve the users friends, friend requests and previous transactions
         Data.retrieveAllFriends();
         Data.retrieveAllRequests();
         Data.retrieveAllTransactions();
@@ -333,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("unchecked")
     private void processNewMapData(String json) throws JSONException {
         JSONObject mapData = new JSONObject(json);
-        mExchangeRates     = mapData.getJSONObject("rates");
+        JSONObject mExchangeRates = mapData.getJSONObject("rates");
         mCoinData          = mapData.getJSONArray("features");
 
         HashMap<String,Double> rates = new HashMap<>();
@@ -354,12 +353,10 @@ public class MainActivity extends AppCompatActivity {
             final String id = coinProperties.getString("id");
             Double value    = Double.parseDouble(coinProperties.getString("value"));
             String currency = coinProperties.getString("currency");
-            String symbol   = coinProperties.getString("marker-symbol");
-            String colour   = coinProperties.getString("marker-color");
             LatLng location = new LatLng(coords.getDouble(1), coords.getDouble(0));
 
             // Create coin from parsed data and add it to uncollected coins in Data class
-            Coin coin = new Coin(id, value, currency, symbol, colour, location);
+            Coin coin = new Coin(id, value, currency, location);
             Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
@@ -389,19 +386,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     *  @brief  { Invoke superclass to resume application }
-     */
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected  void onPause() {
-        super.onPause();
-    }
-
-    /*
      *  @brief  { Add authentication state listener to firebase authentication
      *            instance }
      */
@@ -424,10 +408,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected  void onDestroy() {
-        super.onDestroy();
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected  void onPause() {
+        super.onPause();
     }
 }

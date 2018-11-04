@@ -77,4 +77,19 @@ public class BankFragment extends Fragment {
         mRecyclerViewTrans.setAdapter(mTransAdapter);
         return view;
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
 }

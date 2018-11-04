@@ -97,4 +97,3 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
         return mRequests.size();
     }
 }
-

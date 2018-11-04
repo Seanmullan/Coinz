@@ -210,9 +210,4 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
     public void onPause() {
         super.onPause();
     }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
 }

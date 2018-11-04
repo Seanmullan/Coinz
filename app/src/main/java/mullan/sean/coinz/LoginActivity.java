@@ -1,7 +1,6 @@
 package mullan.sean.coinz;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,9 +10,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
@@ -51,32 +47,19 @@ public class LoginActivity extends AppCompatActivity {
         Button btnRegister      = findViewById(R.id.btn_not_a_member);
         Button btnResetPassword = findViewById(R.id.btn_reset_password);
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btnLogin.setOnClickListener(v -> {
 
-                String email    = mFieldEmail.getText().toString().trim();
-                String password = mFieldPassword.getText().toString().trim();
+            String email    = mFieldEmail.getText().toString().trim();
+            String password = mFieldPassword.getText().toString().trim();
 
-                if (detailsEntered(email, password)) {
-                    authenticateUser(email, password);
-                }
+            if (detailsEntered(email, password)) {
+                authenticateUser(email, password);
             }
         });
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                proceedToActivity(RegisterActivity.class);
-            }
-        });
+        btnRegister.setOnClickListener(v -> proceedToActivity(RegisterActivity.class));
 
-        btnResetPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                proceedToActivity(ResetPasswordActivity.class);
-            }
-        });
+        btnResetPassword.setOnClickListener(v -> proceedToActivity(ResetPasswordActivity.class));
     }
 
     /*
@@ -109,19 +92,15 @@ public class LoginActivity extends AppCompatActivity {
         mProgressBar.setVisibility(View.VISIBLE);
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(LoginActivity.this,
-                        new OnCompleteListener<AuthResult>() {
-
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        mProgressBar.setVisibility(View.GONE);
-                        if (task.isSuccessful()) {
-                            proceedToActivity(MainActivity.class);
-                            finish();
-                        } else {
-                            displayToast(getString(R.string.auth_failed));
-                        }
-                    }
-                });
+                        task -> {
+                            mProgressBar.setVisibility(View.GONE);
+                            if (task.isSuccessful()) {
+                                proceedToActivity(MainActivity.class);
+                                finish();
+                            } else {
+                                displayToast(getString(R.string.auth_failed));
+                            }
+                        });
     }
 
     /*

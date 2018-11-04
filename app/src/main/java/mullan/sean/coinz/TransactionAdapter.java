@@ -57,7 +57,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     /*
-     *  @return  { Size of your friends ArrayList (invoked by the layout manager) }
+     *  @return  { Size of your transactions ArrayList (invoked by the layout manager) }
      */
     @Override
     public int getItemCount() {

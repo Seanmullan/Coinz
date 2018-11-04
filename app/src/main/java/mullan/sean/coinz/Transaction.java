@@ -21,6 +21,9 @@ public class Transaction {
         return dateOfTransaction;
     }
 
+    /*
+     *  @return  { returns Map of transaction data }
+     */
     public Map<String,Object> getTransactionMap() {
         Map<String,Object> transactionMap = new HashMap<>();
         transactionMap.put("gold", goldAdded);

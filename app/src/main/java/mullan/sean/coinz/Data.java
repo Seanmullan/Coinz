@@ -233,7 +233,7 @@ public final class Data {
 
         // Upload coin to specified collection on firebase
         String coinId = coin.getId();
-        HashMap<String,Object> coinData = coin.getCoinMap();
+        Map<String,Object> coinData = coin.getCoinMap();
         mUserDocRef.collection(collection).document(coinId).set(coinData)
                 .addOnSuccessListener(aVoid -> {
                     if (collection.equals(UNCOLLECTED)) {
@@ -323,7 +323,7 @@ public final class Data {
 
     /*
      *  @brief  { Retrieves all documents in the users transactions subcollection,
-     *            then creates a Transaction object for each document and stoes
+     *            then creates a Transaction object for each document and stores
      *            the objects in an ArrayList }
      */
     public static void retrieveAllTransactions() {
@@ -523,12 +523,10 @@ public final class Data {
         String id         = doc.getId();
         double value      = (double) coinData.get("value");
         String currency   = (String) coinData.get("currency");
-        String symbol     = (String) coinData.get("symbol");
-        String colour     = (String) coinData.get("colour");
         double latitude   = (double) coinData.get("latitude");
         double longitude  = (double) coinData.get("longitude");
         LatLng location   = new LatLng(latitude, longitude);
-        return new Coin(id, value, currency, symbol, colour, location);
+        return new Coin(id, value, currency, location);
     }
 
     /*
