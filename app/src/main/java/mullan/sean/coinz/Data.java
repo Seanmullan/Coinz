@@ -43,6 +43,7 @@ public final class Data {
     private static ArrayList<Coin>        mReceivedCoins;
     private static ArrayList<Friend>      mFriends;
     private static ArrayList<Friend>      mRequests;
+    private static ArrayList<Transaction> mTransactions;
     private static double                 mGoldAmount;
     private static int                    mUncollectedCoinCount;
     private static int                    mFriendTransferCount;
@@ -61,6 +62,7 @@ public final class Data {
         mReceivedCoins        = new ArrayList<>();
         mFriends              = new ArrayList<>();
         mRequests             = new ArrayList<>();
+        mTransactions         = new ArrayList<>();
         mGoldAmount           = 0;
         mUncollectedCoinCount = 0;
         mFriendTransferCount  = 0;
@@ -94,6 +96,8 @@ public final class Data {
     public static ArrayList<Friend> getRequests() {
         return mRequests;
     }
+
+    public static ArrayList<Transaction> getTransactions() { return mTransactions; }
 
     public static void clearFriendTransferCount() { mFriendTransferCount = 0; }
 
@@ -317,6 +321,21 @@ public final class Data {
                 });
     }
 
+    public static void retrieveAllTransactions() {
+        Log.d(TAG, "[retrieveAllTransactions] retrieving transactions");
+        mUserDocRef.collection(TRANSACTIONS).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            mTransactions.add(documentToTransaction(document));
+                        }
+                        Log.d(TAG, "[retrieveAllTransactions] success");
+                    } else {
+                        Log.d(TAG, "[retrieveAllTransaction] failed to retrieve transactions");
+                    }
+                });
+    }
+
     /*
      *  @brief  { Performs three steps to accept a friend request:
      *             1) Remove friend from users requests subcollection
@@ -463,8 +482,14 @@ public final class Data {
         });
     }
 
+    /*
+     *  @brief  { Adds the value of gold from the transaction to the current value of gold,
+     *            then updates this value on the users document. The transaction object is
+     *            then added to the users transactions subcollection }
+     */
     public static void addTransaction(Transaction transaction) {
         mGoldAmount += transaction.getGoldAdded();
+        mTransactions.add(transaction);
         mUserDocRef.update("gold", mGoldAmount)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -512,6 +537,13 @@ public final class Data {
         String username = (String) friendData.get("username");
         String email    = (String) friendData.get("email");
         return new Friend(uid, username, email);
+    }
+
+    private static Transaction documentToTransaction(QueryDocumentSnapshot doc) {
+        Map<String, Object> transData = doc.getData();
+        String date = (String) transData.get("date");
+        double gold = (double) transData.get("gold");
+        return new Transaction(gold, date);
     }
 
     /*

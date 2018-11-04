@@ -225,6 +225,17 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         builder.show();
     }
 
+    /*
+     *  @brief  { This method handles the transfer of coins from a players local wallet to their
+     *            bank account. It imposes the the limit of the player only being able to transfer
+     *            a maximum of 25 coins that they have collected into their bank account per day
+     *            (no limit for received coins). For each coin, the value of gold is calculated
+     *            given the current exchange rate for that currency, and the coin is removed
+     *            from the appropriate collection. Once all coins have been processed, a
+     *            transaction object is created that includes the current date and the amount
+     *            of gold all the selected coins were worth. The transaction object is then
+     *            passed to the data class for processing }
+     */
     private void transferToBankAccount() {
         ArrayList<Coin> selectedCoins;
         String collection;

@@ -285,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
         // Retrieve the users friends and friend requests
         Data.retrieveAllFriends();
         Data.retrieveAllRequests();
+        Data.retrieveAllTransactions();
     }
 
     /*
