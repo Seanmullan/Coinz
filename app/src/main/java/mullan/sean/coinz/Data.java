@@ -34,21 +34,23 @@ public final class Data {
     public static final String PENY         = "PENY";
     private static final String TAG         = "C_DATA";
 
-    private static CollectionReference    mUsersRef;
-    private static DocumentReference      mUserDocRef;
-    private static DocumentSnapshot       mUserDocSnap;
-    private static HashMap<String,Double> mExchangeRates;
-    private static ArrayList<Coin>        mUncollectedCoins;
-    private static ArrayList<Coin>        mCollectedCoins;
-    private static ArrayList<Coin>        mReceivedCoins;
-    private static ArrayList<Friend>      mFriends;
-    private static ArrayList<Friend>      mRequests;
-    private static ArrayList<Transaction> mTransactions;
-    private static double                 mGoldAmount;
-    private static int                    mCollectedTransferred;
-    private static int                    mUncollectedCoinCount;
-    private static int                    mFriendTransferCount;
-    private static int                    mBankTransferCount;
+    private static CollectionReference        mUsersRef;
+    private static DocumentReference          mUserDocRef;
+    private static DocumentSnapshot           mUserDocSnap;
+    private static HashMap<String,Double>     mExchangeRates;
+    private static ArrayList<Coin>            mUncollectedCoins;
+    private static ArrayList<Coin>            mCollectedCoins;
+    private static ArrayList<Coin>            mReceivedCoins;
+    private static ArrayList<Friend>          mFriends;
+    private static ArrayList<Friend>          mRequests;
+    private static ArrayList<Transaction>     mTransactions;
+    private static ArrayList<LeaderBoardUser> mFriendLeaderBoard;
+    private static ArrayList<LeaderBoardUser> mGlobalLeaderBoard;
+    private static double                     mGoldAmount;
+    private static int                        mCollectedTransferred;
+    private static int                        mUncollectedCoinCount;
+    private static int                        mFriendTransferCount;
+    private static int                        mBankTransferCount;
 
     /*
      *  @brief  { Initialise the document reference that will be used to identify
@@ -64,6 +66,8 @@ public final class Data {
         mFriends              = new ArrayList<>();
         mRequests             = new ArrayList<>();
         mTransactions         = new ArrayList<>();
+        mFriendLeaderBoard    = new ArrayList<>();
+        mGlobalLeaderBoard    = new ArrayList<>();
         mGoldAmount           = 0;
         mCollectedTransferred = 0;
         mUncollectedCoinCount = 0;
@@ -117,6 +121,14 @@ public final class Data {
 
     public static ArrayList<Transaction> getTransactions() {
         return mTransactions;
+    }
+
+    public static ArrayList<LeaderBoardUser> getFriendLeaderBoard() {
+        return mFriendLeaderBoard;
+    }
+
+    public static ArrayList<LeaderBoardUser> getGlobalLeaderBoard() {
+        return mGlobalLeaderBoard;
     }
 
     public static void clearFriendTransferCount() {
@@ -622,6 +634,32 @@ public final class Data {
     }
 
     /*
+     *  @brief  { Finds all users from firebase, and an object is then created for each user
+     *            so they can be placed on the global leader board. If the user is also in the
+     *            friends list, then they are added to the friends leader board }
+     */
+    public static void retrieveLeaderBoard(OnEventListener<String> event) {
+        mUsersRef.get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            LeaderBoardUser user = documentToUser(document);
+                            mGlobalLeaderBoard.add(user);
+
+                            // Add user to friends leader board if they are in users friends list
+                            for (Friend friend : mFriends) {
+                                if (user.getUsername().equals(friend.getUsername())) {
+                                    mFriendLeaderBoard.add(user);
+                                }
+                            }
+                        }
+                        event.onSuccess("Success");
+                    } else {
+                        event.onFailure(task.getException());
+                    }
+                });
+    }
+
+    /*
      *  @brief  { Creates a coin object from the document data }
      *
      *  @return { Coin object }
@@ -660,6 +698,13 @@ public final class Data {
         String date = (String) transData.get("date");
         double gold = (double) transData.get("gold");
         return new Transaction(gold, date);
+    }
+
+    private static LeaderBoardUser documentToUser(QueryDocumentSnapshot doc) {
+        Map<String, Object> transData = doc.getData();
+        String name = (String) transData.get("username");
+        double gold = (double) transData.get("gold");
+        return new LeaderBoardUser(name, gold);
     }
 
     /*

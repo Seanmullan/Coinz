@@ -34,8 +34,7 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
     /*
      * @brief { Required empty public constructor }
      */
-    public FriendsFragment() {
-    }
+    public FriendsFragment() {}
 
     /*
      *  @brief  { Invoke onCreate of superclass }

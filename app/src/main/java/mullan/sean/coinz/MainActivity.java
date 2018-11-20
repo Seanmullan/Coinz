@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
      *            method for details. }
      */
     private void getUserDocument(final String uid) {
-        DocumentReference docRef = mFirestore.collection("users").document(uid);
+        DocumentReference   docRef = mFirestore.collection("users").document(uid);
         CollectionReference collRef = mFirestore.collection("users");
         Data.init(docRef, collRef);
         docRef.get().addOnCompleteListener(task -> {
@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Retrieve the users friends, friend requests and previous transactions
+        // Retrieve the users friends and friend requests
         Data.retrieveAllFriends(new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {}
@@ -297,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve friends with exception ", e);
             }
         });
-
         Data.retrieveAllRequests(new OnEventListener<String>() {
             @Override
             public void onSuccess(String object) {}
@@ -306,6 +305,18 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Failed to retrieve requests with exception ", e);
             }
         });
+
+        // Retrieve leader board
+        Data.retrieveLeaderBoard(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {}
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve leader board with exception ", e);
+            }
+        });
+
+        // Retrieve all transactions
         Data.retrieveAllTransactions();
     }
 

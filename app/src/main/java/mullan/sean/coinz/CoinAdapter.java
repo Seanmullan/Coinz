@@ -1,6 +1,5 @@
 package mullan.sean.coinz;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -14,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
@@ -60,12 +60,11 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
     /*
      *  @brief  { Replace the contents of a view (invoked by the layout manager) }
      */
-    @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(@Nonnull MyViewHolder holder, int position) {
         Coin coin = mCoins.get(position);
         holder.mCurrency.setText(coin.getCurrency());
-        holder.mValue.setText(String.format("%.6f", coin.getValue()));
+        holder.mValue.setText(String.format(Locale.getDefault(), "%.6f", coin.getValue()));
         holder.itemView.setBackgroundColor(coin.isSelected() ? Color.GRAY : Color.WHITE);
         holder.itemView.setOnClickListener(v -> {
             coin.setSelected(!coin.isSelected());
