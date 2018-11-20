@@ -181,7 +181,10 @@ public final class Data {
      *  @brief  { This procedure fetches all documents within the specified collection
      *            argument. It identifies the collection and stores the retrieved coins
      *            in their respective ArrayLists. The caller is notified if the procedure
-     *            was a success or failure }
+     *            was a success or failure. In the case of received coins, this list will
+     *            be updated every time the user goes into their wallet (so it is up to date
+     *            if they have received coins from someone), so we add the coin to the received
+     *            list if it does not already exist there }
      */
     public static void retrieveAllCoinsFromCollection(final String collection,
                                                       final OnEventListener<String> event) {
@@ -190,15 +193,27 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if(task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
+                            Coin coin = documentToCoin(document);
                             switch (collection) {
                                 case UNCOLLECTED:
-                                    mUncollectedCoins.add(documentToCoin(document));
+                                    mUncollectedCoins.add(coin);
                                     break;
                                 case COLLECTED:
-                                    mCollectedCoins.add(documentToCoin(document));
+                                    mCollectedCoins.add(coin);
                                     break;
                                 case RECEIVED:
-                                    mReceivedCoins.add(documentToCoin(document));
+                                    boolean coinAlreadyExists = false;
+                                    // If coin is already in list, break from search
+                                    for (Coin compare : mReceivedCoins) {
+                                        if (coin.getId().equals(compare.getId())) {
+                                            coinAlreadyExists = true;
+                                            break;
+                                        }
+                                    }
+                                    // Add coin if it isn't already in the received list
+                                    if (!coinAlreadyExists) {
+                                        mReceivedCoins.add(coin);
+                                    }
                                     break;
                                 default:
                                     Log.d(TAG, "Invalid collection argument");

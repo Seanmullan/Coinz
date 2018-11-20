@@ -87,6 +87,9 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mCollectedCoins       = Data.getCollectedCoins();
         mReceivedCoins        = Data.getReceivedCoins();
 
+        // Fetch most up to date received coins list in background
+        updateReceivedCoinsInBackground();
+
         // Initialise buttons and progress bar
         FloatingActionButton fabSend = view.findViewById(R.id.sendcoins);
         Button btnCollected = view.findViewById(R.id.btn_collected);
@@ -171,6 +174,32 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mRecyclerViewCol.setVisibility(View.INVISIBLE);
         mRecyclerViewRec.setVisibility(View.VISIBLE);
         mReceivedAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { In the background, retrieve most up to date data from received coins.
+     *            If retrieved data is different from current data, then update the UI
+     *            with most up to date data }
+     */
+    private void updateReceivedCoinsInBackground() {
+        Log.d(TAG, "[updateReceivedCoinsInBackground] updating...");
+        Data.retrieveAllCoinsFromCollection(Data.RECEIVED, new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                // If received coins view is currently visible, update the view (which also updates
+                // the data), otherwise just update the data
+                if (mRecyclerViewRec.getVisibility() == View.VISIBLE) {
+                    updateReceivedView();
+                } else {
+                    mReceivedCoins = Data.getReceivedCoins();
+                }
+                Log.d(TAG, "[updateReceivedCoinsInBackground] updated");
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "[updateReceivedCoinsInBackground] failed to retrieve coins: ", e);
+            }
+        });
     }
 
     /*
