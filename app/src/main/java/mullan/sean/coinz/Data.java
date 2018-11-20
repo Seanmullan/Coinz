@@ -127,6 +127,14 @@ public final class Data {
         mBankTransferCount = 0;
     }
 
+    public static String getUsersEmail() {
+        if (mUserDocSnap != null) {
+            return mUserDocSnap.getString("email");
+        } else {
+            return "";
+        }
+    }
+
     /*
      *  @brief  { Sets exchange rates HashMap and uploads rates data to firebase }
      */
@@ -519,9 +527,9 @@ public final class Data {
                         // always only be one document as user's emails are unique) and
                         // place the current user in the located user's requests subcollection
                         } else {
-                            String friendId = result.getDocuments().get(0).getId();
-                            String userId = mUserDocSnap.getId();
-                            String username = mUserDocSnap.getString("username");
+                            String friendId  = result.getDocuments().get(0).getId();
+                            String userId    = mUserDocSnap.getId();
+                            String username  = mUserDocSnap.getString("username");
                             String userEmail = mUserDocSnap.getString("email");
                             HashMap<String, Object> userMap = new HashMap<>();
                             userMap.put("username", username);

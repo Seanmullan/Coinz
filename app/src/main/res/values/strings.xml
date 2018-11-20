@@ -48,5 +48,8 @@
     <string name="action_settings">Settings</string>
     <string name="msg_friend_request">Friend request sent!</string>
     <string name="msg_add_friend_failed">Failed to send friend request</string>
+    <string name="msg_user_adding_self">You can\'t add yourself as a friend</string>
+    <string name="msg_friend_already_exists">You already have this user as a friend</string>
+    <string name="msg_request_already_exists">This user has already sent you a friend request</string>
 
 </resources>

@@ -24,12 +24,12 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_FRIENDS";
 
-    private RecyclerView mRecyclerViewFriends;
-    private RecyclerView mRecyclerViewRequests;
-    private FriendAdapter mFriendsAdapter;
-    private RequestAdapter mRequestAdapter;
     private ArrayList<Friend> mFriends;
     private ArrayList<Friend> mRequests;
+    private RecyclerView      mRecyclerViewFriends;
+    private RecyclerView      mRecyclerViewRequests;
+    private FriendAdapter     mFriendsAdapter;
+    private RequestAdapter    mRequestAdapter;
 
     /*
      * @brief { Required empty public constructor }
@@ -214,7 +214,6 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
      *            address of the friend they wish to add. The sendFriendRequest method
      *            is then called in the data class with the entered email }
      */
-    @SuppressWarnings("unchecked")
     private void openAddFriendDialogue() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
         builder.setTitle("Enter their email address");
@@ -230,27 +229,70 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         builder.setPositiveButton("Add", (dialog, which) -> {
             String email = input.getText().toString();
 
-            // Send friend request
-            Data.sendFriendRequest(email, new OnEventListener() {
-                @Override
-                public void onSuccess(Object object) {
-                    Toast.makeText(getLayoutInflater().getContext(),
-                            R.string.msg_friend_request,
-                            Toast.LENGTH_SHORT).show();
-                }
-                @Override
-                public void onFailure(Exception e) {
-                    Log.d(TAG, "Nothing found");
-                    Toast.makeText(getLayoutInflater().getContext(),
-                            R.string.msg_add_friend_failed,
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
+            if(isRequestValid(email)) {
+                // Send friend request
+                Data.sendFriendRequest(email, new OnEventListener<String>() {
+                    @Override
+                    public void onSuccess(String object) {
+                        Toast.makeText(getLayoutInflater().getContext(),
+                                R.string.msg_friend_request,
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.d(TAG, "Nothing found");
+                        Toast.makeText(getLayoutInflater().getContext(),
+                                R.string.msg_add_friend_failed,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         // Display builder
         builder.show();
+    }
+
+    /*
+     *  @brief  { Checks the validity of the friend request }
+     *
+     *  @return { True if friend request is valid, false otherwise }
+     */
+    private boolean isRequestValid(String email) {
+        // Check that the user is not entering their own email address
+        if (email.equals(Data.getUsersEmail())) {
+            displayToast(getString(R.string.msg_user_adding_self));
+            return false;
+        }
+
+        // Check that the user is not trying to add someone who is already their friend
+        for (Friend friend : mFriends) {
+            if (email.equals(friend.getEmail())) {
+                displayToast(getString(R.string.msg_friend_already_exists));
+                return false;
+            }
+        }
+
+        // Check that the user is not trying to add someone who has already sent them a request
+        for (Friend request : mRequests) {
+            if (email.equals(request.getEmail())) {
+                displayToast(getString(R.string.msg_request_already_exists));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+     *  @brief  { Display message on device }
+     *
+     *  @params { Message to be displayed }
+     */
+    private void displayToast(String message) {
+        Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
