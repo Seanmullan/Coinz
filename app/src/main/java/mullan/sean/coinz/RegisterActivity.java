@@ -13,7 +13,9 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,10 +26,12 @@ public class RegisterActivity extends AppCompatActivity {
 
     private FirebaseFirestore   mFirestore;
     private FirebaseAuth        mAuth;
+    private CollectionReference mUsersRef;
     private ProgressBar         mProgressBar;
     private EditText            mFieldUsername;
     private EditText            mFieldEmail;
     private EditText            mFieldPassword;
+    private boolean             mUsernameAvailable;
 
     /*
      *  @brief  { Display registration view, set listeners for buttons and
@@ -41,12 +45,15 @@ public class RegisterActivity extends AppCompatActivity {
         // Get Firebase firestore and authentication instances
         mFirestore = FirebaseFirestore.getInstance();
         mAuth      = FirebaseAuth.getInstance();
+        mUsersRef  = mFirestore.collection("users");
 
         // Views
         mProgressBar   = findViewById(R.id.progressBar);
         mFieldUsername = findViewById(R.id.username);
         mFieldEmail    = findViewById(R.id.email);
         mFieldPassword = findViewById(R.id.password);
+
+        mUsernameAvailable = true;
 
         // Buttons
         Button btnRegister = findViewById(R.id.btn_register);
@@ -58,9 +65,27 @@ public class RegisterActivity extends AppCompatActivity {
             String email    = mFieldEmail.getText().toString().trim();
             String password = mFieldPassword.getText().toString().trim();
 
-            // Check validity of user entered details. Create account if valid
+            // Check validity of user entered details. If valid, check that the entered
+            // username is not being used by another user. If not, create user account
             if (detailsValid(username, email, password)) {
-                createUserAccount(username, email, password);
+                mProgressBar.setVisibility(View.VISIBLE);
+                checkUsernameAvailable(username, new OnEventListener<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean usernameAvailable) {
+                        if (usernameAvailable) {
+                            createUserAccount(username, email, password);
+                        } else {
+                            mProgressBar.setVisibility(View.GONE);
+                            displayToast("Username already exists, please try another");
+                        }
+                    }
+                    @Override
+                    public void onFailure(Exception e) {
+                        mProgressBar.setVisibility(View.GONE);
+                        displayToast("Failed to create account, please try again");
+                        Log.d(TAG, "[onCreate] failed to fetch user data", e);
+                    }
+                });
             }
         });
 
@@ -97,7 +122,42 @@ public class RegisterActivity extends AppCompatActivity {
             displayToast(getString(R.string.error_password_short));
             return false;
         }
+
         return true;
+    }
+
+    /*
+     *  @brief  { Fetches all users in firebase and checks if the username entered has
+     *            already been taken by another user. Callback will return true if
+     *            username is available, and false otherwise }
+     */
+    private void checkUsernameAvailable(String username, OnEventListener<Boolean> event) {
+        mUsersRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Log.d(TAG, "[checkUsernameAvailable] successfully retrieved user data");
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Map<String, Object> userData = document.getData();
+                    String name = (String) userData.get("username");
+
+                    // If username is taken, return false
+                    if (username.equals(name)) {
+                        Log.d(TAG, "[checkUsernameAvailable] username already exists");
+                        event.onSuccess(false);
+                        mUsernameAvailable = false;
+                        break;
+                    }
+                }
+                // If username is available, return true
+                if (mUsernameAvailable) {
+                    event.onSuccess(true);
+                }
+
+                // Reset username available flag
+                mUsernameAvailable = true;
+            } else {
+                event.onFailure(task.getException());
+            }
+        });
     }
 
     /*
@@ -106,18 +166,20 @@ public class RegisterActivity extends AppCompatActivity {
      *            activity. If unsuccessful, print task exception.
      */
     private void createUserAccount(final String username, final String email, String password) {
-        mProgressBar.setVisibility(View.VISIBLE);
+        Log.d(TAG, "[createUserAccount] creating user account...");
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(RegisterActivity.this, task -> {
                     if (task.isSuccessful()) {
+                        Log.d(TAG, "[createUserAccount] user account created");
                         displayToast(getString(R.string.registration_success));
                         addUserToDatabase(username, email);
                         proceedToActivity(MainActivity.class);
                         finish();
                     } else {
-                        displayToast(getString(R.string.registration_fail) + task.getException());
+                        Log.d(TAG, "[createUserAccount] failed: " + task.getException());
+                        displayToast(getString(R.string.registration_fail));
+                        mProgressBar.setVisibility(View.GONE);
                     }
-                    mProgressBar.setVisibility(View.GONE);
                 });
     }
 
@@ -138,7 +200,7 @@ public class RegisterActivity extends AppCompatActivity {
         if (user != null) {
             String uid = user.getUid();
             mFirestore.collection("users").document(uid).set(userData)
-                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Document successfully added"))
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "User doc successfully added"))
                     .addOnFailureListener(e -> Log.d(TAG, "Error adding document", e));
         } else {
             displayToast(getString(R.string.user_null_pointer));
