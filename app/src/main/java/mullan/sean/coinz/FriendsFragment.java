@@ -56,8 +56,13 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
         View view = inflater.inflate(R.layout.fragment_friends, container, false);
 
-        mFriends = Data.getFriends();
+        // Populate UI with current data
+        mFriends  = Data.getFriends();
         mRequests = Data.getRequests();
+
+        // Retrieve most up to date friend and requests data in background
+        updateFriendsInBackground();
+        updateRequestsInBackground();
 
         FloatingActionButton fabAddFriend = view.findViewById(R.id.addfriend);
         Button btnFriends = view.findViewById(R.id.btn_friends);
@@ -150,6 +155,58 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         mRecyclerViewFriends.setVisibility(View.INVISIBLE);
         mRecyclerViewRequests.setVisibility(View.VISIBLE);
         mRequestAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { In the background, retrieve most up to date data from friends collection.
+     *            If retrieved data is different from current data, then update the UI
+     *            with most up to date data }
+     */
+    private void updateFriendsInBackground() {
+        Log.d(TAG, "[updateFriendsInBackground] updating...");
+        Data.retrieveAllFriends(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                // If friends view is currently visible, update the view (which also updates
+                // the data), otherwise just update the data
+                if (mRecyclerViewFriends.getVisibility() == View.VISIBLE) {
+                    updateFriendsView();
+                } else {
+                    mFriends = Data.getFriends();
+                }
+                Log.d(TAG, "[updateFriendsInBackground] updated");
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "[updateFriendsInBackground] couldn't retrieve friends: ", e);
+            }
+        });
+    }
+
+    /*
+     *  @brief  { In the background, retrieve most up to date data from friend requests.
+     *            If retrieved data is different from current data, then update the UI
+     *            with most up to date data }
+     */
+    private void updateRequestsInBackground() {
+        Log.d(TAG, "[updateRequestsInBackground] updating...");
+        Data.retrieveAllRequests(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                // If requests view is currently visible, update the view (which also updates
+                // the data), otherwise just update the data
+                if (mRecyclerViewRequests.getVisibility() == View.VISIBLE) {
+                    updateRequestsView();
+                } else {
+                    mRequests = Data.getRequests();
+                }
+                Log.d(TAG, "[updateRequestsInBackground] updated");
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "[updateRequestsInBackground] couldn't retrieve requests: ", e);
+            }
+        });
     }
 
     /*

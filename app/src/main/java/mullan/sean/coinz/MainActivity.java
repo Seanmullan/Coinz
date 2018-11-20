@@ -289,8 +289,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Retrieve the users friends, friend requests and previous transactions
-        Data.retrieveAllFriends();
-        Data.retrieveAllRequests();
+        Data.retrieveAllFriends(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {}
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve friends with exception ", e);
+            }
+        });
+
+        Data.retrieveAllRequests(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {}
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "Failed to retrieve requests with exception ", e);
+            }
+        });
         Data.retrieveAllTransactions();
     }
 
@@ -364,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Create coin from parsed data and add it to uncollected coins in Data class
             Coin coin = new Coin(id, value, currency, location);
-            Data.addCoinToCollection(coin, Data.COLLECTED, new OnEventListener() {
+            Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object object) {
                     Log.d(TAG, "Coin successfully added with ID: " + id);

@@ -318,41 +318,73 @@ public final class Data {
     }
 
     /*
-     *  @brief  { Retrieves all documents in the users friends subcollection,
-     *            then creates a Friend object for each document and stores
-     *            the objects in an ArrayList }
+     *  @brief  { Retrieves all documents in the users friends subcollection, then creates a
+     *            Friend object for each document and stores the object in an ArrayList if the
+     *            friend does not already exist in the list (this case arises when friends
+     *            fragment calls this method to retrieve the most up to date friends list).
+     *            Caller is notified when procedure is complete }
      */
-    public static void retrieveAllFriends() {
+    public static void retrieveAllFriends(OnEventListener<String> event) {
         Log.d(TAG, "[retrieveAllFriends] retrieving friends");
         mUserDocRef.collection(FRIENDS).get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            mFriends.add(documentToFriend(document));
+                            Friend friend = documentToFriend(document);
+                            boolean friendAlreadyExists = false;
+                            // If friend is already in list, break from search
+                            for (Friend compare : mFriends) {
+                                if (friend.getUserID().equals(compare.getUserID())) {
+                                    friendAlreadyExists = true;
+                                    break;
+                                }
+                            }
+                            // Add friend if they aren't already in the list
+                            if (!friendAlreadyExists) {
+                                mFriends.add(friend);
+                            }
                         }
                         Log.d(TAG, "[retrieveAllFriends] success");
+                        event.onSuccess("Success");
                     } else {
                         Log.d(TAG, "[retrieveAllFriends] failed to retrieve friends");
+                        event.onFailure(task.getException());
                     }
-                    });
+                });
     }
 
     /*
-     *  @brief  { Retrieves all documents in the users request's subcollection,
-     *            then creates a Friend object for each document and stores
-     *            the objects in an ArrayList }
+     *  @brief  { Retrieves all documents in the users requests subcollection, then creates a
+     *            Friend object for each document and stores the object in an ArrayList if the
+     *            request does not already exist in the list (this case arises when friends
+     *            fragment calls this method to retrieve the most up to date requests list).
+     *            Caller is notified when procedure is complete }
      */
-    public static void retrieveAllRequests() {
+    public static void retrieveAllRequests(OnEventListener<String> event) {
         Log.d(TAG, "[retrieveAllRequests] retrieving friend requests");
         mUserDocRef.collection(REQUESTS).get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            mRequests.add(documentToFriend(document));
+                            Friend request = documentToFriend(document);
+                            boolean requestAlreadyExists = false;
+                            // If request is already in list, break from search
+                            for (Friend compare : mRequests) {
+                                if (request.getUserID().equals(compare.getUserID())) {
+                                    requestAlreadyExists = true;
+                                    break;
+                                }
+                            }
+                            // Add request if they aren't already in the list
+                            if (!requestAlreadyExists) {
+                                mRequests.add(request);
+                            }
                         }
                         Log.d(TAG, "[retrieveAllRequests] success");
+                        event.onSuccess("Success");
                     } else {
-                        Log.d(TAG, "[retrieveAllRequests] failed to retrieve friends");
+                        Log.d(TAG, "[retrieveAllRequests] failed to retrieve requests");
+                        event.onFailure(task.getException());
                     }
                 });
     }
@@ -402,6 +434,7 @@ public final class Data {
         mFriends.add(friend);
         HashMap<String,String> friendMap = new HashMap<>();
         friendMap.put("username", friend.getUsername());
+        friendMap.put("email", friend.getEmail());
         mUserDocRef.collection(FRIENDS).document(friendId).set(friendMap)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -416,6 +449,7 @@ public final class Data {
         // Add user to the requester's friends subcollection
         HashMap<String,String> userMap = new HashMap<>();
         userMap.put("username", mUserDocSnap.getString("username"));
+        userMap.put("email", mUserDocSnap.getString("email"));
         mUsersRef.document(friendId).collection(FRIENDS).document(mUserDocRef.getId()).set(userMap)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
