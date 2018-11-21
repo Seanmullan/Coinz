@@ -31,8 +31,7 @@ public class User {
     }
 
     /*
-     *  @brief  { Two User objects are equal if they have the same ID (since
-     *            ID's are unique, this means it is the same user) }
+     *  @return  { True if and only if ID's are equal }
      */
     @Override
     public boolean equals(Object user) {

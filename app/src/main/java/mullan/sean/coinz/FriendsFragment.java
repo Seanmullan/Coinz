@@ -267,7 +267,6 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         }
 
         // Check that the user is not trying to add someone who is already their friend
-        // TODO: Change to contains
         for (User friend : mFriends) {
             if (email.equals(friend.getEmail())) {
                 displayToast(getString(R.string.msg_friend_already_exists));
@@ -276,7 +275,6 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         }
 
         // Check that the user is not trying to add someone who has already sent them a request
-        // TODO: Change to contains
         for (User request : mRequests) {
             if (email.equals(request.getEmail())) {
                 displayToast(getString(R.string.msg_request_already_exists));

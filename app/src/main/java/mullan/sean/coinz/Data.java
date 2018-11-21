@@ -222,16 +222,7 @@ public final class Data {
                                     mCollectedCoins.add(coin);
                                     break;
                                 case RECEIVED:
-                                    boolean coinAlreadyExists = false;
-                                    // If coin is already in list, break from search
-                                    for (Coin compare : mReceivedCoins) {
-                                        if (coin.getId().equals(compare.getId())) {
-                                            coinAlreadyExists = true;
-                                            break;
-                                        }
-                                    }
-                                    // Add coin if it isn't already in the received list
-                                    if (!coinAlreadyExists) {
+                                    if (!mReceivedCoins.contains(coin)) {
                                         mReceivedCoins.add(coin);
                                     }
                                     break;
@@ -365,19 +356,9 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            User friend = documentToUser(document);
-                            boolean friendAlreadyExists = false;
-                            // If friend is already in list, break from search
-                            // TODO: Change to contains
-                            for (User compare : mFriends) {
-                                if (friend.getUserID().equals(compare.getUserID())) {
-                                    friendAlreadyExists = true;
-                                    break;
-                                }
-                            }
-                            // Add friend if they aren't already in the list
-                            if (!friendAlreadyExists) {
-                                mFriends.add(friend);
+                            User user = documentToUser(document);
+                            if (!mFriends.contains(user)) {
+                                mFriends.add(user);
                             }
                         }
                         Log.d(TAG, "[retrieveAllFriends] success");
@@ -402,18 +383,9 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            User request = documentToUser(document);
-                            boolean requestAlreadyExists = false;
-                            // If request is already in list, break from search
-                            for (User compare : mRequests) {
-                                if (request.getUserID().equals(compare.getUserID())) {
-                                    requestAlreadyExists = true;
-                                    break;
-                                }
-                            }
-                            // Add request if they aren't already in the list
-                            if (!requestAlreadyExists) {
-                                mRequests.add(request);
+                            User user = documentToUser(document);
+                            if (!mRequests.contains(user)) {
+                                mRequests.add(user);
                             }
                         }
                         Log.d(TAG, "[retrieveAllRequests] success");
@@ -449,7 +421,7 @@ public final class Data {
      *  @brief  { Performs three steps to accept a friend request:
      *             1) Remove friend from users requests subcollection
      *             2) Add friend to users friends subcollection
-     *             3) Add user to the requester's friends subcollection
+     *             3) Add user to the requester's friends subcollection }
      */
     public static void acceptFriendRequest(User friend) {
         // Remove friend from users requests subcollection
@@ -499,7 +471,7 @@ public final class Data {
     }
 
     /*
-     *  @brief  {  Removes friend requester from users requests subcollection
+     *  @brief  {  Removes friend requester from users requests subcollection }
      */
     public static void declineFriendRequest(User friend) {
         mRequests.remove(friend);

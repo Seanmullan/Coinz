@@ -58,6 +58,18 @@ public class Coin {
     }
 
     /*
+     *  @return  { True if and only if ID's are equal }
+     */
+    @Override
+    public boolean equals(Object coin) {
+        if (coin.getClass().equals(Coin.class)) {
+            return this.id.equals(((Coin) coin).id);
+        } else {
+            return false;
+        }
+    }
+
+    /*
      *  @return { Returns Map of coin data }
      */
     public Map<String,Object> getCoinMap() {
