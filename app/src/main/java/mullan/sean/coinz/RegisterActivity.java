@@ -193,7 +193,7 @@ public class RegisterActivity extends AppCompatActivity {
         Map<String, Object> userData = new HashMap<>();
         userData.put("username", username);
         userData.put("email", email);
-        userData.put("gold", 0);
+        userData.put("gold", 0.0);
         userData.put("lastSavedDate", "");
         userData.put("collectedTransferred", 0);
         FirebaseUser user = mAuth.getCurrentUser();

@@ -3,34 +3,175 @@ package mullan.sean.coinz;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
-public class LeaderBoardFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
-    public LeaderBoardFragment() {
-        // Required empty public constructor
-    }
+import javax.annotation.Nonnull;
 
-    public static LeaderBoardFragment newInstance(String param1, String param2) {
-        LeaderBoardFragment fragment = new LeaderBoardFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
+import static java.util.Collections.*;
 
+public class LeaderBoardFragment extends Fragment implements View.OnClickListener {
+
+    private static final String TAG = "C_BOARD";
+
+    private ArrayList<LeaderBoardUser> mFriends;
+    private ArrayList<LeaderBoardUser> mGlobal;
+    private RecyclerView               mRecyclerViewFriends;
+    private RecyclerView               mRecyclerViewGlobal;
+    private LeaderBoardAdapter         mFriendsAdapter;
+    private LeaderBoardAdapter         mGlobalAdapter;
+
+    /*
+     * @brief { Required empty public constructor }
+     */
+    public LeaderBoardFragment() {}
+
+    /*
+     *  @brief  { Invoke onCreate of superclass }
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
+    /*
+     *  @brief  { Inflate the layout, and initialise adapter and recycler view.
+     *            Set default display to friends leader board, and add listeners
+     *            for friends and global buttons }
+     */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_leader_board, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_leader_board, container, false);
+
+        // Populate UI with current data
+        mFriends = Data.getFriendLeaderBoard();
+        Log.d(TAG, "Friends:" + mFriends);
+        mGlobal  = Data.getGlobalLeaderBoard();
+
+        // Retrieve most up to date leader board data in background
+        updateLeaderBoardInBackground();
+
+        Button btnFriends = view.findViewById(R.id.btn_friends_lb);
+        Button btnGlobal  = view.findViewById(R.id.btn_global_lb);
+
+        mRecyclerViewFriends = view.findViewById(R.id.friends_lb_recycler_view);
+        mRecyclerViewGlobal  = view.findViewById(R.id.global_lb_recycler_view);
+        mRecyclerViewGlobal.setVisibility(View.INVISIBLE);
+
+        // Set layout manager
+        RecyclerView.LayoutManager mLayoutFriends = new LinearLayoutManager(inflater.getContext());
+        mRecyclerViewFriends.setLayoutManager(mLayoutFriends);
+        RecyclerView.LayoutManager mLayoutGlobal  = new LinearLayoutManager(inflater.getContext());
+        mRecyclerViewGlobal.setLayoutManager(mLayoutGlobal);
+
+        // Initialise adapters
+        mFriendsAdapter = new LeaderBoardAdapter(mFriends);
+        mGlobalAdapter = new LeaderBoardAdapter(mGlobal);
+
+        // Add line a line between each object in the recycler view list
+        mRecyclerViewFriends.addItemDecoration(
+                new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
+        mRecyclerViewGlobal.addItemDecoration(
+                new DividerItemDecoration(inflater.getContext(), LinearLayoutManager.VERTICAL));
+
+        // Set adapters
+        mRecyclerViewFriends.setAdapter(mFriendsAdapter);
+        mRecyclerViewGlobal.setAdapter(mGlobalAdapter);
+
+        btnFriends.setOnClickListener(this);
+        btnGlobal.setOnClickListener(this);
+
+        return view;
+    }
+
+    /*
+     *  @brief  { Update the recycler view with new data }
+     */
+    @Override
+    public void onClick(View v) {
+        Log.d(TAG, "[onClick] updating recycler view");
+        switch (v.getId()) {
+            case R.id.btn_friends_lb:
+                updateFriendsView();
+                break;
+            case R.id.btn_global_lb:
+                updateGlobalView();
+                break;
+            default:
+                break;
+        }
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes global recycler invisible
+     *            and makes friends recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateFriendsView() {
+        mFriends = Data.getFriendLeaderBoard();
+        Log.d(TAG, "Friends:" + mFriends);
+        mFriends.sort((a,b)->Double.compare(b.getGold(), a.getGold()));
+        mRecyclerViewGlobal.setVisibility(View.INVISIBLE);
+        mRecyclerViewFriends.setVisibility(View.VISIBLE);
+        mFriendsAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { Retrieves updated data, makes friends recycler invisible
+     *            and makes global recycler visible, then notifies adapter
+     *            of data change }
+     */
+    private void updateGlobalView() {
+        mGlobal = Data.getGlobalLeaderBoard();
+        mGlobal.sort((a,b)->Double.compare(b.getGold(), a.getGold()));
+        mRecyclerViewFriends.setVisibility(View.INVISIBLE);
+        mRecyclerViewGlobal.setVisibility(View.VISIBLE);
+        mGlobalAdapter.notifyDataSetChanged();
+    }
+
+    /*
+     *  @brief  { In the background, retrieve most up to date data from leader board.
+     *            If retrieved data is different from current data, then update the UI
+     *            with most up to date data }
+     */
+    private void updateLeaderBoardInBackground() {
+        Log.d(TAG, "[updateLeaderBoardInBackground] updating...");
+        Data.retrieveLeaderBoard(new OnEventListener<String>() {
+            @Override
+            public void onSuccess(String object) {
+                // Update the currently displayed view (which also updates
+                // the data) and the data
+                if (mRecyclerViewFriends.getVisibility() == View.VISIBLE) {
+                    Log.d(TAG, "UPDATING FRIENDS VIEW");
+                    updateFriendsView();
+                    mGlobal = Data.getGlobalLeaderBoard();
+                } else {
+                    Log.d(TAG, "UPDATING GLOBAL VIEW");
+                    updateGlobalView();
+                    mFriends = Data.getFriendLeaderBoard();
+                }
+                Log.d(TAG, "[updateLeaderBoardInBackground] updated");
+            }
+            @Override
+            public void onFailure(Exception e) {
+                Log.d(TAG, "[updateLeaderBoardInBackground] failed: ", e);
+            }
+        });
     }
 
     @Override

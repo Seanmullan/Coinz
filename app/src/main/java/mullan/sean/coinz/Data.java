@@ -639,19 +639,27 @@ public final class Data {
      *            friends list, then they are added to the friends leader board }
      */
     public static void retrieveLeaderBoard(OnEventListener<String> event) {
+        Log.d(TAG, "[retrieveLeaderBoard] retrieving leader board");
         mUsersRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
+                            // Ignore the rates document within users
+                            if (document.getId().equals("rates")) {
+                                continue;
+                            }
                             LeaderBoardUser user = documentToUser(document);
-                            mGlobalLeaderBoard.add(user);
-
-                            // Add user to friends leader board if they are in users friends list
-                            for (Friend friend : mFriends) {
-                                if (user.getUsername().equals(friend.getUsername())) {
-                                    mFriendLeaderBoard.add(user);
+                            if (!mGlobalLeaderBoard.contains(user)) {
+                                mGlobalLeaderBoard.add(user);
+                                // Add user to friends leader board if they are in users friends list
+                                for (Friend friend : mFriends) {
+                                    if (user.getUsername().equals(friend.getUsername())) {
+                                        mFriendLeaderBoard.add(user);
+                                    }
                                 }
                             }
                         }
+                        Log.d(TAG, "[retrieveLeaderBoard] success");
+                        Log.d(TAG, "Success friends" + mFriends);
                         event.onSuccess("Success");
                     } else {
                         event.onFailure(task.getException());
@@ -701,9 +709,9 @@ public final class Data {
     }
 
     private static LeaderBoardUser documentToUser(QueryDocumentSnapshot doc) {
-        Map<String, Object> transData = doc.getData();
-        String name = (String) transData.get("username");
-        double gold = (double) transData.get("gold");
+        Map<String, Object> userData = doc.getData();
+        String name = (String) userData.get("username");
+        double gold = (double) userData.get("gold");
         return new LeaderBoardUser(name, gold);
     }
 

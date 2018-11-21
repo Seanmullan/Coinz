@@ -23,4 +23,9 @@ public class Friend {
     public String getEmail() {
         return mEmail;
     }
+
+    @Override
+    public boolean equals(Object friend) {
+        return this.getUserID().equals(((Friend) friend).mUserId);
+    }
 }

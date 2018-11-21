@@ -146,7 +146,7 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
     /*
      *  @brief  { Retrieves updated data, makes friends recycler invisible
-     *            and makes recycler recycler visible, then notifies adapter
+     *            and makes requests recycler visible, then notifies adapter
      *            of data change }
      */
     private void updateRequestsView() {

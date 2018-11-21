@@ -1,5 +1,7 @@
 package mullan.sean.coinz;
 
+import android.util.Log;
+
 public class LeaderBoardUser {
 
     private String mUsername;
@@ -16,5 +18,14 @@ public class LeaderBoardUser {
 
     public double getGold() {
         return mGold;
+    }
+
+    @Override
+    public boolean equals(Object user) {
+        if (user.getClass().equals(LeaderBoardUser.class)) {
+            return this.mUsername.equals(((LeaderBoardUser) user).mUsername);
+        } else {
+            return false;
+        }
     }
 }
