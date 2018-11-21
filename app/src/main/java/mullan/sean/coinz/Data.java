@@ -19,7 +19,23 @@ public final class Data {
 
     /*
      *  This class serves as a global data structure that uploads and downloads from
-     *  the firebase database
+     *  the firebase database. Most of the variables are hopefully self explanatory,
+     *  however I've explain the bottom four which are more ambiguous:
+     *
+     *  mCollectedTransferred:  The amount of collected coins (only collected, not received) the
+     *                          user has transferred into their bank account on the current day
+     *
+     *  mUncollectedCoinCount:  The amount of coins that have currently been transferred into the
+     *                          "uncollected" subcollection in firebase
+     *
+     *  mFriendTransferCount:   The amount of coins that have currently been transferred from the
+     *                          user to a friend
+     *
+     *  mBankTransferCount:     The amount of coins that have currently been transferred from the
+     *                          users local wallet to their bank account
+     *
+     *  The above three "count" variables get reset after each transfer/transaction - they are
+     *  used so the caller can identify when all coins have successfully been transferred
      */
 
     public static final String UNCOLLECTED  = "uncollected";
