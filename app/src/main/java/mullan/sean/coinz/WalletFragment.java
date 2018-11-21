@@ -237,18 +237,18 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                     if(!mBankTransferInProgress) {
                         transferToBankAccount();
                     } else {
-                        displayToast("Please wait until current transfer completes");
+                        displayToast(getString(R.string.msg_wait_on_transfer_completion));
                     }
                     break;
                 case "friend":
                     if (!mFriendTransferInProgress) {
                         friendTransfer();
                     } else {
-                        displayToast("Please wait until current transfer completes");
+                        displayToast(getString(R.string.msg_wait_on_transfer_completion));
                     }
                     break;
                 case "":
-                    displayToast("Please select a transfer option");
+                    displayToast(getString(R.string.msg_select_transfer_option));
                 default:
                     Log.d(TAG, "[openSendDialogue] transfer not recognised: " + mSelectedTransfer);
             }});
@@ -279,7 +279,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
             collection    = Data.COLLECTED;
             // Impose 25 coin limit
             if (selectedCoins.size() > (25 - Data.getCollectedTransferred())) {
-                displayToast("You cannot transfer more than 25 collected coins per day!");
+                displayToast(getString(R.string.msg_25_coin_limit));
                 return;
             }
         } else {
@@ -288,7 +288,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
 
         if (selectedCoins.size() == 0) {
-            displayToast("Please select coins to send");
+            displayToast(getString(R.string.msg_please_select_coins));
             return;
         }
 
@@ -331,7 +331,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         }
                         mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "[sendCoinsToFriend] transfer complete");
-                        displayToast("Transfer complete");
+                        displayToast(getString(R.string.msg_transfer_complete));
                     } else {
                         mBankTransferTotal++;
                     }
@@ -357,7 +357,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         }
 
                     } else {
-                        displayToast("Failed to transfer " + c.getCurrency()
+                        displayToast(getString(R.string.msg_failed_to_transfer) + c.getCurrency()
                                 + " worth " + c.getValue());
                     }
                     Log.d(TAG, "[sendCoins] failed to transfer coin: " + c.getId());
@@ -403,7 +403,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         sendCoinsToFriend();
                     } else {
                         // No user has been selected
-                        displayToast("Please select a friend");
+                        displayToast(getString(R.string.msg_select_friend));
                     }
                 }));
 
@@ -434,7 +434,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
 
         if (selectedCoins.size() == 0) {
-            displayToast("Please select coins to send");
+            displayToast(getString(R.string.msg_please_select_coins));
             return;
         }
 
@@ -465,7 +465,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                 } else {
                                     updateReceivedView();
                                 }
-                                displayToast("Successfully sent coins to "
+                                displayToast(getString(R.string.msg_successfully_sent_coins)
                                         + mSelectedFriend.getUsername());
                                 Log.d(TAG, "[sendCoinsToFriend] transfer complete");
 
@@ -494,8 +494,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                 }
 
                             } else {
-                                displayToast("Failed to send " + c.getCurrency()
-                                        + " worth " + c.getValue());
+                                displayToast(getString(R.string.msg_failed_to_send)
+                                        + c.getCurrency() + " worth " + c.getValue());
                             }
                             Log.d(TAG, "[sendCoins] failed to send coin: " + c.getId());
                         }

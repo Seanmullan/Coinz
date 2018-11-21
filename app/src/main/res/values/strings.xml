@@ -51,5 +51,18 @@
     <string name="msg_user_adding_self">You can\'t add yourself as a friend</string>
     <string name="msg_friend_already_exists">You already have this user as a friend</string>
     <string name="msg_request_already_exists">This user has already sent you a friend request</string>
+    <string name="msg_wait_on_transfer_completion">Please wait until current transfer completes</string>
+    <string name="msg_select_transfer_option">Please select a transfer option</string>
+    <string name="msg_25_coin_limit">You cannot transfer more than 25 collected coins per day!</string>
+    <string name="msg_please_select_coins">Please select coins to send</string>
+    <string name="msg_transfer_complete">Transfer complete</string>
+    <string name="msg_failed_to_transfer">Failed to transfer</string>
+    <string name="msg_select_friend">Please select a friend</string>
+    <string name="msg_successfully_sent_coins">Successfully sent coins to</string>
+    <string name="msg_failed_to_send">Failed to send</string>
+    <string name="msg_please_enable_permissions">Please enable permissions for this application</string>
+    <string name="msg_requires_permissions">This application requires the following permissions:</string>
+    <string name="msg_username_already_exists">Username already exists, please try another</string>
+    <string name="msg_failed_to_create_account">Failed to create account, please try again</string>
 
 </resources>

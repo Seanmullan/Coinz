@@ -126,7 +126,7 @@ public class MapFragment extends Fragment implements
         if (granted) {
             enableLocation();
         } else {
-            displayToast("Please enable permissions for this application");
+            displayToast(getString(R.string.msg_please_enable_permissions));
         }
     }
 
@@ -138,7 +138,7 @@ public class MapFragment extends Fragment implements
     public void onExplanationNeeded(List<String> permissionsToExplain) {
         String permissions = permissionsToExplain.toString();
         Log.d(TAG, "Permissions: " + permissions);
-        String msg = "This application requires the following permissions: " + permissions;
+        String msg = getString(R.string.msg_requires_permissions) + permissions;
         displayToast(msg);
     }
 

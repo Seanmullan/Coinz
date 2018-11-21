@@ -76,13 +76,13 @@ public class RegisterActivity extends AppCompatActivity {
                             createUserAccount(username, email, password);
                         } else {
                             mProgressBar.setVisibility(View.GONE);
-                            displayToast("Username already exists, please try another");
+                            displayToast(getString(R.string.msg_username_already_exists));
                         }
                     }
                     @Override
                     public void onFailure(Exception e) {
                         mProgressBar.setVisibility(View.GONE);
-                        displayToast("Failed to create account, please try again");
+                        displayToast(getString(R.string.msg_failed_to_create_account));
                         Log.d(TAG, "[onCreate] failed to fetch user data", e);
                     }
                 });
