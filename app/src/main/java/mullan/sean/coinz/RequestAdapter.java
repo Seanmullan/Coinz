@@ -18,14 +18,14 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
 
     private static final String TAG = "C_REQUESTADAPTER";
 
-    private ArrayList<Friend> mRequests;
-    private ClickListener     acceptListener;
-    private ClickListener     declineListener;
+    private ArrayList<User> mRequests;
+    private ClickListener   acceptListener;
+    private ClickListener   declineListener;
 
     /*
      *  @brief  { Adapter constructor }
      */
-    public RequestAdapter(ArrayList<Friend> requests, ClickListener accept, ClickListener decline) {
+    public RequestAdapter(ArrayList<User> requests, ClickListener accept, ClickListener decline) {
         this.mRequests = requests;
         this.acceptListener = accept;
         this.declineListener = decline;
@@ -84,7 +84,7 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
      */
     @Override
     public void onBindViewHolder(@Nonnull RequestAdapter.MyViewHolder holder, int position) {
-        Friend request = mRequests.get(position);
+        User request = mRequests.get(position);
         holder.username.setText(request.getUsername());
         holder.email.setText(request.getEmail());
     }

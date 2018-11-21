@@ -34,23 +34,23 @@ public final class Data {
     public static final String PENY         = "PENY";
     private static final String TAG         = "C_DATA";
 
-    private static CollectionReference        mUsersRef;
-    private static DocumentReference          mUserDocRef;
-    private static DocumentSnapshot           mUserDocSnap;
-    private static HashMap<String,Double>     mExchangeRates;
-    private static ArrayList<Coin>            mUncollectedCoins;
-    private static ArrayList<Coin>            mCollectedCoins;
-    private static ArrayList<Coin>            mReceivedCoins;
-    private static ArrayList<Friend>          mFriends;
-    private static ArrayList<Friend>          mRequests;
-    private static ArrayList<Transaction>     mTransactions;
-    private static ArrayList<LeaderBoardUser> mFriendLeaderBoard;
-    private static ArrayList<LeaderBoardUser> mGlobalLeaderBoard;
-    private static double                     mGoldAmount;
-    private static int                        mCollectedTransferred;
-    private static int                        mUncollectedCoinCount;
-    private static int                        mFriendTransferCount;
-    private static int                        mBankTransferCount;
+    private static CollectionReference    mUsersRef;
+    private static DocumentReference      mUserDocRef;
+    private static DocumentSnapshot       mUserDocSnap;
+    private static HashMap<String,Double> mExchangeRates;
+    private static ArrayList<Coin>        mUncollectedCoins;
+    private static ArrayList<Coin>        mCollectedCoins;
+    private static ArrayList<Coin>        mReceivedCoins;
+    private static ArrayList<User>        mFriends;
+    private static ArrayList<User>        mRequests;
+    private static ArrayList<Transaction> mTransactions;
+    private static ArrayList<User>        mFriendLeaderBoard;
+    private static ArrayList<User>        mGlobalLeaderBoard;
+    private static double                 mGoldAmount;
+    private static int                    mCollectedTransferred;
+    private static int                    mUncollectedCoinCount;
+    private static int                    mFriendTransferCount;
+    private static int                    mBankTransferCount;
 
     /*
      *  @brief  { Initialise the document reference that will be used to identify
@@ -111,11 +111,11 @@ public final class Data {
         return mReceivedCoins;
     }
 
-    public static ArrayList<Friend> getFriends() {
+    public static ArrayList<User> getFriends() {
         return mFriends;
     }
 
-    public static ArrayList<Friend> getRequests() {
+    public static ArrayList<User> getRequests() {
         return mRequests;
     }
 
@@ -123,11 +123,11 @@ public final class Data {
         return mTransactions;
     }
 
-    public static ArrayList<LeaderBoardUser> getFriendLeaderBoard() {
+    public static ArrayList<User> getFriendLeaderBoard() {
         return mFriendLeaderBoard;
     }
 
-    public static ArrayList<LeaderBoardUser> getGlobalLeaderBoard() {
+    public static ArrayList<User> getGlobalLeaderBoard() {
         return mGlobalLeaderBoard;
     }
 
@@ -354,7 +354,7 @@ public final class Data {
 
     /*
      *  @brief  { Retrieves all documents in the users friends subcollection, then creates a
-     *            Friend object for each document and stores the object in an ArrayList if the
+     *            User object for each document and stores the object in an ArrayList if the
      *            friend does not already exist in the list (this case arises when friends
      *            fragment calls this method to retrieve the most up to date friends list).
      *            Caller is notified when procedure is complete }
@@ -365,10 +365,11 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            Friend friend = documentToFriend(document);
+                            User friend = documentToUser(document);
                             boolean friendAlreadyExists = false;
                             // If friend is already in list, break from search
-                            for (Friend compare : mFriends) {
+                            // TODO: Change to contains
+                            for (User compare : mFriends) {
                                 if (friend.getUserID().equals(compare.getUserID())) {
                                     friendAlreadyExists = true;
                                     break;
@@ -390,7 +391,7 @@ public final class Data {
 
     /*
      *  @brief  { Retrieves all documents in the users requests subcollection, then creates a
-     *            Friend object for each document and stores the object in an ArrayList if the
+     *            User object for each document and stores the object in an ArrayList if the
      *            request does not already exist in the list (this case arises when friends
      *            fragment calls this method to retrieve the most up to date requests list).
      *            Caller is notified when procedure is complete }
@@ -401,10 +402,10 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            Friend request = documentToFriend(document);
+                            User request = documentToUser(document);
                             boolean requestAlreadyExists = false;
                             // If request is already in list, break from search
-                            for (Friend compare : mRequests) {
+                            for (User compare : mRequests) {
                                 if (request.getUserID().equals(compare.getUserID())) {
                                     requestAlreadyExists = true;
                                     break;
@@ -450,7 +451,7 @@ public final class Data {
      *             2) Add friend to users friends subcollection
      *             3) Add user to the requester's friends subcollection
      */
-    public static void acceptFriendRequest(Friend friend) {
+    public static void acceptFriendRequest(User friend) {
         // Remove friend from users requests subcollection
         mRequests.remove(friend);
         String friendId = friend.getUserID();
@@ -500,7 +501,7 @@ public final class Data {
     /*
      *  @brief  {  Removes friend requester from users requests subcollection
      */
-    public static void declineFriendRequest(Friend friend) {
+    public static void declineFriendRequest(User friend) {
         mRequests.remove(friend);
         String friendId = friend.getUserID();
         mUserDocRef.collection(REQUESTS).document(friendId).delete()
@@ -571,7 +572,7 @@ public final class Data {
      *            of coins that have currently been transferred - this is so the caller can
      *            identify when all coins have been transferred }
      */
-    public static void sendCoinToFriend(Friend friend, Coin coin, String collection,
+    public static void sendCoinToFriend(User friend, Coin coin, String collection,
                                         OnEventListener<Integer> event) {
 
         removeCoinFromCollection(coin, collection, new OnEventListener<Integer>() {
@@ -647,19 +648,15 @@ public final class Data {
                             if (document.getId().equals("rates")) {
                                 continue;
                             }
-                            LeaderBoardUser user = documentToUser(document);
+                            User user = documentToUser(document);
                             if (!mGlobalLeaderBoard.contains(user)) {
                                 mGlobalLeaderBoard.add(user);
-                                // Add user to friends leader board if they are in users friends list
-                                for (Friend friend : mFriends) {
-                                    if (user.getUsername().equals(friend.getUsername())) {
-                                        mFriendLeaderBoard.add(user);
-                                    }
-                                }
+                            }
+                            if (mFriends.contains(user) && !mFriendLeaderBoard.contains(user)) {
+                                mFriendLeaderBoard.add(user);
                             }
                         }
                         Log.d(TAG, "[retrieveLeaderBoard] success");
-                        Log.d(TAG, "Success friends" + mFriends);
                         event.onSuccess("Success");
                     } else {
                         event.onFailure(task.getException());
@@ -684,16 +681,22 @@ public final class Data {
     }
 
     /*
-     *  @brief  { Creates a friend object from the document data }
+     *  @brief  { Creates a user object from the document data. Adds check for null value of
+     *            gold - this is because the friends and requests subcollection's only contain
+     *            username and email, so we ignore the value of gold by setting it to 0 }
      *
-     *  @return { Friend object }
+     *  @return { User object }
      */
-    private static Friend documentToFriend(QueryDocumentSnapshot doc) {
-        Map<String, Object> friendData = doc.getData();
+    private static User documentToUser(QueryDocumentSnapshot doc) {
+        Map<String, Object> userData = doc.getData();
         String uid      = doc.getId();
-        String username = (String) friendData.get("username");
-        String email    = (String) friendData.get("email");
-        return new Friend(uid, username, email);
+        String username = (String) userData.get("username");
+        String email    = (String) userData.get("email");
+        double gold = 0;
+        if (!(userData.get("gold") == null)) {
+            gold = (double) userData.get("gold");
+        }
+        return new User(uid, username, email, gold);
     }
 
     /*
@@ -706,13 +709,6 @@ public final class Data {
         String date = (String) transData.get("date");
         double gold = (double) transData.get("gold");
         return new Transaction(gold, date);
-    }
-
-    private static LeaderBoardUser documentToUser(QueryDocumentSnapshot doc) {
-        Map<String, Object> userData = doc.getData();
-        String name = (String) userData.get("username");
-        double gold = (double) userData.get("gold");
-        return new LeaderBoardUser(name, gold);
     }
 
     /*

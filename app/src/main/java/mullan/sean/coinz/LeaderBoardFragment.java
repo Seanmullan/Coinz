@@ -27,12 +27,12 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
 
     private static final String TAG = "C_BOARD";
 
-    private ArrayList<LeaderBoardUser> mFriends;
-    private ArrayList<LeaderBoardUser> mGlobal;
-    private RecyclerView               mRecyclerViewFriends;
-    private RecyclerView               mRecyclerViewGlobal;
-    private LeaderBoardAdapter         mFriendsAdapter;
-    private LeaderBoardAdapter         mGlobalAdapter;
+    private ArrayList<User>    mFriends;
+    private ArrayList<User>    mGlobal;
+    private RecyclerView       mRecyclerViewFriends;
+    private RecyclerView       mRecyclerViewGlobal;
+    private LeaderBoardAdapter mFriendsAdapter;
+    private LeaderBoardAdapter mGlobalAdapter;
 
     /*
      * @brief { Required empty public constructor }
@@ -157,11 +157,9 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
                 // Update the currently displayed view (which also updates
                 // the data) and the data
                 if (mRecyclerViewFriends.getVisibility() == View.VISIBLE) {
-                    Log.d(TAG, "UPDATING FRIENDS VIEW");
                     updateFriendsView();
                     mGlobal = Data.getGlobalLeaderBoard();
                 } else {
-                    Log.d(TAG, "UPDATING GLOBAL VIEW");
                     updateGlobalView();
                     mFriends = Data.getFriendLeaderBoard();
                 }

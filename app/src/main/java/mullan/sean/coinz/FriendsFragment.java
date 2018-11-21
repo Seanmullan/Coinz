@@ -24,8 +24,8 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_FRIENDS";
 
-    private ArrayList<Friend> mFriends;
-    private ArrayList<Friend> mRequests;
+    private ArrayList<User>   mFriends;
+    private ArrayList<User>   mRequests;
     private RecyclerView      mRecyclerViewFriends;
     private RecyclerView      mRecyclerViewRequests;
     private FriendAdapter     mFriendsAdapter;
@@ -82,13 +82,13 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
 
         mRequestAdapter = new RequestAdapter(mRequests,
                 position -> {
-                    Friend friend = mRequests.get(position);
+                    User friend = mRequests.get(position);
                     Data.acceptFriendRequest(friend);
                     String msg = "Friend request accepted: " + friend.getUsername();
                     Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
                     updateRequestsView();
                 }, position -> {
-                    Friend friend = mRequests.get(position);
+                    User friend = mRequests.get(position);
                     Data.declineFriendRequest(friend);
                     String msg = "Friend request declined: " + friend.getUsername();
                     Toast.makeText(inflater.getContext(), msg, Toast.LENGTH_SHORT).show();
@@ -267,7 +267,8 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         }
 
         // Check that the user is not trying to add someone who is already their friend
-        for (Friend friend : mFriends) {
+        // TODO: Change to contains
+        for (User friend : mFriends) {
             if (email.equals(friend.getEmail())) {
                 displayToast(getString(R.string.msg_friend_already_exists));
                 return false;
@@ -275,7 +276,8 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         }
 
         // Check that the user is not trying to add someone who has already sent them a request
-        for (Friend request : mRequests) {
+        // TODO: Change to contains
+        for (User request : mRequests) {
             if (email.equals(request.getEmail())) {
                 displayToast(getString(R.string.msg_request_already_exists));
                 return false;

@@ -12,7 +12,7 @@ import javax.annotation.Nonnull;
 
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHolder> {
 
-    private ArrayList<Friend> mFriends;
+    private ArrayList<User> mFriends;
 
     /*
      *  @brief  { Provides a reference to the views for each data item }
@@ -30,7 +30,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
     /*
      *  @brief  { Adapter constructor }
      */
-    public FriendAdapter(ArrayList<Friend> friends) {
+    public FriendAdapter(ArrayList<User> friends) {
         this.mFriends = friends;
     }
 
@@ -50,7 +50,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
      */
     @Override
     public void onBindViewHolder(@Nonnull FriendAdapter.MyViewHolder holder, int position) {
-        Friend friend = mFriends.get(position);
+        User friend = mFriends.get(position);
         holder.mUsername.setText(friend.getUsername());
         holder.mEmail.setText(friend.getEmail());
     }

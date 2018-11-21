@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
 
 public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.MyViewHolder> {
 
-    private ArrayList<LeaderBoardUser> mUsers;
+    private ArrayList<User> mUsers;
 
     /*
      *  @brief  { Provides a reference to the views for each data item }
@@ -31,7 +31,7 @@ public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.
     /*
      *  @brief  { Adapter constructor }
      */
-    public LeaderBoardAdapter(ArrayList<LeaderBoardUser> users) {
+    public LeaderBoardAdapter(ArrayList<User> users) {
         this.mUsers = users;
     }
 
@@ -51,7 +51,7 @@ public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.
      */
     @Override
     public void onBindViewHolder(@Nonnull LeaderBoardAdapter.MyViewHolder holder, int position) {
-        LeaderBoardUser user = mUsers.get(position);
+        User user = mUsers.get(position);
         holder.mUsername.setText(user.getUsername());
         holder.mGold.setText(String.format(Locale.getDefault(), "%.6f", user.getGold()));
     }

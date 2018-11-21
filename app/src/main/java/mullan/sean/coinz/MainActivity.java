@@ -291,7 +291,17 @@ public class MainActivity extends AppCompatActivity {
         // Retrieve the users friends and friend requests
         Data.retrieveAllFriends(new OnEventListener<String>() {
             @Override
-            public void onSuccess(String object) {}
+            public void onSuccess(String object) {
+                // Retrieve leader board once friends list is populated
+                Data.retrieveLeaderBoard(new OnEventListener<String>() {
+                    @Override
+                    public void onSuccess(String object) {}
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.d(TAG, "Failed to retrieve leader board with exception ", e);
+                    }
+                });
+            }
             @Override
             public void onFailure(Exception e) {
                 Log.d(TAG, "Failed to retrieve friends with exception ", e);
@@ -303,16 +313,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Exception e) {
                 Log.d(TAG, "Failed to retrieve requests with exception ", e);
-            }
-        });
-
-        // Retrieve leader board
-        Data.retrieveLeaderBoard(new OnEventListener<String>() {
-            @Override
-            public void onSuccess(String object) {}
-            @Override
-            public void onFailure(Exception e) {
-                Log.d(TAG, "Failed to retrieve leader board with exception ", e);
             }
         });
 

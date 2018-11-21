@@ -38,7 +38,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     private CoinAdapter     mReceivedAdapter;
     private ArrayList<Coin> mCollectedCoins;
     private ArrayList<Coin> mReceivedCoins;
-    private Friend          mSelectedFriend;
+    private User            mSelectedFriend;
     private String          mSelectedTransfer;
     private ProgressBar     mProgressBar;
     private double          mGoldAmount;
@@ -380,8 +380,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         // Retrieve friends
         List<String> options = new ArrayList<>();
-        ArrayList<Friend> friends = Data.getFriends();
-        for (Friend f : friends) {
+        ArrayList<User> friends = Data.getFriends();
+        for (User f : friends) {
             options.add(f.getUsername());
         }
 
