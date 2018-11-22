@@ -63,6 +63,8 @@ public final class Data {
     private static ArrayList<User>        mFriendLeaderBoard;
     private static ArrayList<User>        mGlobalLeaderBoard;
     private static double                 mGoldAmount;
+    private static boolean                mBonusUsed;
+    private static boolean                mBonusActive;
     private static int                    mCollectedTransferred;
     private static int                    mUncollectedCoinCount;
     private static int                    mFriendTransferCount;
@@ -84,6 +86,8 @@ public final class Data {
         mTransactions         = new ArrayList<>();
         mFriendLeaderBoard    = new ArrayList<>();
         mGlobalLeaderBoard    = new ArrayList<>();
+        mBonusUsed            = false;
+        mBonusActive          = false;
         mGoldAmount           = 0;
         mCollectedTransferred = 0;
         mUncollectedCoinCount = 0;
@@ -105,6 +109,18 @@ public final class Data {
 
     public static void setGoldAmount(double gold) {
         mGoldAmount = gold;
+    }
+
+    public static boolean getBonusUsed() {
+        return mBonusUsed;
+    }
+
+    public static boolean getBonusActive() {
+        return mBonusActive;
+    }
+
+    public static void setBonusActive(boolean active) {
+        mBonusActive = active;
     }
 
     public static void setCollectedTransferred(int transferred) {
@@ -178,6 +194,26 @@ public final class Data {
                 });
     }
 
+    /*
+     *  @brief  { Sets the flag that indicates whether or not the user has used their
+     *            daily bonus }
+     */
+    public static void setBonusUsed(boolean bonusUsed) {
+        mBonusUsed = bonusUsed;
+        mUserDocRef.update("bonusUsed", bonusUsed)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "[setBonusUsed] success");
+                    } else {
+                        Log.d(TAG, "[setBonusUsed] failed" + task.getException());
+                    }
+                });
+    }
+
+    /*
+     *  @brief  { Resets the count of the number of collected coins the user has transferred
+     *            into their bank account for the present day }
+     */
     public static void clearCollectedTransferred() {
         mCollectedTransferred = 0;
         mUserDocRef.update("collectedTransferred", 0)
@@ -185,7 +221,7 @@ public final class Data {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "[clearCollectedTransferred] success");
                     } else {
-                        Log.d(TAG, "[clearCollectedTransferred] success");
+                        Log.d(TAG, "[clearCollectedTransferred] failed" + task.getException());
                     }
                 });
     }
@@ -258,7 +294,6 @@ public final class Data {
      *  @brief  { This procedure removes all documents within the specified collection
      *            argument, and removes the coin from the corresponding ArrayList }
      */
-    @SuppressWarnings("unchecked")
     public static void clearAllCoinsFromCollection(String collection) {
         Log.d(TAG, "[clearAllCoinsFromCollection] clearing coins from " + collection);
         Iterator<Coin> i;

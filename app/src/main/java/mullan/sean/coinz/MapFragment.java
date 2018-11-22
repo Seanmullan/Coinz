@@ -1,13 +1,18 @@
 package mullan.sean.coinz;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mapbox.android.core.location.LocationEngine;
@@ -37,13 +42,17 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 public class MapFragment extends Fragment implements
-        OnMapReadyCallback, LocationEngineListener, PermissionsListener  {
+        OnMapReadyCallback, LocationEngineListener, PermissionsListener {
 
     private static final String TAG  = "C_MAP";
 
     private static ArrayList<Coin>      mUncollectedCoins = new ArrayList<>();
     private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
     private static MapboxMap            map;
+    private static boolean              mBonusUsed;
+    private FloatingActionButton        btnBonus;
+    private CardView                    txtBonus;
+    private TextView                    txtTimer;
     private LatLng                      mCurrentLocation;
     private MapView                     mapView;
     private LocationEngine              locationEngine;
@@ -75,6 +84,16 @@ public class MapFragment extends Fragment implements
         // Fetch uncollected coins from Data class
         updateMapData(inflater.getContext());
 
+        mBonusUsed = Data.getBonusUsed();
+        if (!mBonusUsed) {
+            btnBonus = view.findViewById(R.id.bonus);
+            btnBonus.setVisibility(View.VISIBLE);
+            btnBonus.setOnClickListener(v -> startDailyBonus());
+        }
+
+        txtBonus = view.findViewById(R.id.double_value);
+        txtTimer = view.findViewById(R.id.timer);
+
         // Get Mapbox instance
         Mapbox.getInstance(inflater.getContext(), getString(R.string.access_token));
         mapView = view.findViewById(R.id.mapboxMapView);
@@ -88,11 +107,50 @@ public class MapFragment extends Fragment implements
      *            coin markers on the map }
      */
     public static void updateMapData(Context context) {
+        mBonusUsed = Data.getBonusUsed();
         Log.d(TAG, "[updateMapData] fetching uncollected coins");
         Log.d(TAG, "[updateMapData] before fetch - size = " + mUncollectedCoins.size());
         mUncollectedCoins = Data.getUncollectedCoins();
         Log.d(TAG, "[updateMapData] after fetch - size = " + mUncollectedCoins.size());
         updateMarkers(context);
+    }
+
+    /*
+     *  @brief  { Opens dialog with user to start their daily bonus }
+     */
+    private void startDailyBonus() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
+        builder.setTitle("Start Daily Bonus Timer?");
+        builder.setPositiveButton("Yes", (dialog, which) -> beginBonusTimer());
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    /*
+     *  @brief  { Begins the 120 second bonus timer, during which all coins are doubled in
+     *            value. The bonus flags and the view are set, and the seconds remaining
+     *            are displayed to the user }
+     */
+    private void beginBonusTimer() {
+        Log.d(TAG, "[beginBonusTimer] bonus timer activated");
+        Data.setBonusUsed(true);
+        Data.setBonusActive(true);
+        btnBonus.setVisibility(View.INVISIBLE);
+        txtBonus.setVisibility(View.VISIBLE);
+        new CountDownTimer(120000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                txtTimer.setText("Seconds remaining: " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                Log.d(TAG, "[beginBonusTimer] bonus timer complete");
+                txtBonus.setVisibility(View.INVISIBLE);
+                txtTimer.setVisibility(View.INVISIBLE);
+                Data.setBonusActive(false);
+                displayToast(getString(R.string.msg_time_up));
+            }
+        }.start();
     }
 
     /*
@@ -283,12 +341,19 @@ public class MapFragment extends Fragment implements
     }
 
     /*
-     *  @brief  { Inform the user that they have collected a coin. Then, remove the marker from the
-     *            map and remove the coin from the uncollected coins ArrayList. The coin will then
-     *            be removed from the Uncollected subcollection in firebase and placed in the
-     *            Collected subcollection }
+     *  @brief  { Inform the user that they have collected a coin. If the bonus is active, double
+     *            the value of the coin. Then, remove the marker from the map and remove the coin
+     *            from the uncollected coins ArrayList. The coin will then be removed from the
+     *            Uncollected subcollection in firebase and placed in the Collected subcollection }
      */
     private void collectCoin(Coin coin) {
+
+        if (Data.getBonusActive()) {
+            double originalValue = coin.getValue();
+            double newValue = originalValue*2;
+            coin.setValue(newValue);
+        }
+
         String msg = "Coin collected: " + coin.getCurrency()
                 + " worth " + String.format("%.4f", coin.getValue());
         displayToast(msg);

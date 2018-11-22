@@ -64,5 +64,7 @@
     <string name="msg_requires_permissions">This application requires the following permissions:</string>
     <string name="msg_username_already_exists">Username already exists, please try another</string>
     <string name="msg_failed_to_create_account">Failed to create account, please try again</string>
+    <string name="msg_double_value">$$$ DOUBLE VALUE $$$</string>
+    <string name="msg_time_up">Time is up!</string>
 
 </resources>

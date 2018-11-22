@@ -25,10 +25,6 @@ public class Coin {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public double getValue() {
         return value;
     }
@@ -39,10 +35,6 @@ public class Coin {
 
     public String getCurrency() {
         return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
     }
 
     public LatLng getLocation() {

@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private DocumentSnapshot  mUserDoc;
     private FirebaseAuth      mAuth;
     private JSONArray         mCoinData;
+    private String            mLastSavedDate;
+    private String            mCurrentDate;
 
     /*
      *  @brief  { Set main activity view, load in map fragment as default
@@ -66,9 +68,6 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        // Load map fragment by default
-        loadFragment(new MapFragment());
-
         // Create firebase authentication listener
         mAuthListener = firebaseAuth -> {
             if (mAuth.getCurrentUser() == null) {
@@ -81,12 +80,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*
-     *  @brief  { Controls the basic navigation of the application. When a
+     *  @brief  { Controls the basic navigation of the application. Navigation is
+     *            disabled whilst the user is playing the daily bonus game. When a
      *            button is selected on the navigation bar, the corresponding
      *            fragment is loaded }
      */
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = item -> {
+                if (Data.getBonusActive()) {
+                    return false;
+                }
                 Fragment fragment;
                 switch (item.getItemId()) {
                     case R.id.navigation_map:
@@ -167,16 +170,48 @@ public class MainActivity extends AppCompatActivity {
                 // Initialise user document reference and retrieve map data
                 mUserDoc = document;
                 Data.setUserDocSnap(document);
+
+                mLastSavedDate = mUserDoc.getString("lastSavedDate");
+                mCurrentDate   = getCurrentDate();
+
+                if (mLastSavedDate == null || mCurrentDate == null) {
+                    Log.d(TAG, "Saved date or current date is null");
+                    return;
+                }
+
+                // Get amount of gold user has
                 Double gold = document.getDouble("gold");
                 if (gold != null) {
                     Data.setGoldAmount(gold);
                 } else {
                     Log.d(TAG, "[getUserDocument] gold is null");
                 }
+
+                // Get amount of collected coins user has transferred into bank account today
                 Double transferred = document.getDouble("collectedTransferred");
                 if (transferred != null) {
                     Data.setCollectedTransferred(transferred.intValue());
+                } else {
+                    Log.d(TAG, "[getUserDocument] collected transferred is null");
                 }
+
+                // If a new day has begun, set bonusUsed to false and update the flag on firebase
+                if (!mCurrentDate.equals(mLastSavedDate)) {
+                    Data.setBonusUsed(false);
+                } else {
+                    // Otherwise, get bonusUsed flag and set it in the Data class
+                    Boolean bonusUsed = document.getBoolean("bonusUsed");
+                    if (bonusUsed != null) {
+                        Data.setBonusUsed(bonusUsed);
+                    } else {
+                        Log.d(TAG, "[getUserDocument] bonus used is null");
+                    }
+                }
+
+                // Load map fragment by default
+                loadFragment(new MapFragment());
+
+                // Invoke function to fetch data from users subcollection's on firebase
                 populateData();
             } else {
                 Log.d(TAG, "User document get failed with ", task.getException());
@@ -210,18 +245,11 @@ public class MainActivity extends AppCompatActivity {
      */
     @SuppressWarnings("unchecked")
     private void populateData() {
-        String lastSavedDate = mUserDoc.getString("lastSavedDate");
-        String currentDate   = getCurrentDate();
-
-        if (lastSavedDate == null || currentDate == null) {
-            Log.d(TAG, "Saved date or current date is null");
-            return;
-        }
 
         // If a new day has not begun, then retrieve the existing exchange rates. If a new
         // day has begun, then the new exchange rates will be retrieved when retrieveNewMapData()
         // is called
-        if (currentDate.equals(lastSavedDate)) {
+        if (mCurrentDate.equals(mLastSavedDate)) {
             Data.retrieveExchangeRates(new OnEventListener<String>() {
                 @Override
                 public void onSuccess(String object) {
@@ -243,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved uncollected coins");
-                if (!currentDate.equals(lastSavedDate)) {
+                if (!mCurrentDate.equals(mLastSavedDate)) {
                     Data.updateDate(getCurrentDate());
                     Data.clearCollectedTransferred();
                     Data.clearAllCoinsFromCollection(Data.UNCOLLECTED);
@@ -263,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved collected coins");
-                if (!currentDate.equals(lastSavedDate)) {
+                if (!mCurrentDate.equals(mLastSavedDate)) {
                     Data.clearAllCoinsFromCollection(Data.COLLECTED);
                 }
             }
@@ -278,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved received coins");
-                if (!currentDate.equals(lastSavedDate)) {
+                if (!mCurrentDate.equals(mLastSavedDate)) {
                     Data.clearAllCoinsFromCollection(Data.RECEIVED);
                 }
             }

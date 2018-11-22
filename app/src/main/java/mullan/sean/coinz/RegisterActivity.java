@@ -196,6 +196,7 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("gold", 0.0);
         userData.put("lastSavedDate", "");
         userData.put("collectedTransferred", 0);
+        userData.put("bonusUsed", false);
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             String uid = user.getUid();
