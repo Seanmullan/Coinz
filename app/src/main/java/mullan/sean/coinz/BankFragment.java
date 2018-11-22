@@ -66,6 +66,9 @@ public class BankFragment extends Fragment {
         RecyclerView.LayoutManager mLayoutTrans = new LinearLayoutManager(inflater.getContext());
         mRecyclerViewTrans.setLayoutManager(mLayoutTrans);
 
+        // Sort transactions by date
+        mTransactions.sort((a,b)->b.getDate().compareTo(a.getDate()));
+
         // Initialise adapter with transactions list
         TransactionAdapter mTransAdapter = new TransactionAdapter(mTransactions);
 
