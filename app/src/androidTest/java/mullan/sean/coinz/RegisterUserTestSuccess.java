@@ -1,18 +1,13 @@
 package mullan.sean.coinz;
 
+
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
-import android.support.test.rule.GrantPermissionRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.*;
-import static android.support.test.espresso.assertion.ViewAssertions.*;
-import static android.support.test.espresso.matcher.ViewMatchers.*;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -21,35 +16,66 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
 /*
- *  @brief  { This class tests a successful log in - before running, ensure that a user is not
- *            already logged in }
+ *  @brief  { This class tests tests the successful registration of a test user with details:
+ *            Username: test, Email: test@outlook.com, Password: password }
  */
+
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LoginActivityTestSuccess {
+public class RegisterUserTestSuccess {
 
     @Rule
     public ActivityTestRule<LoginActivity> mActivityTestRule = new ActivityTestRule<>(LoginActivity.class);
 
-    @Rule
-    public GrantPermissionRule mGrantPermissionRule =
-            GrantPermissionRule.grant(
-                    "android.permission.ACCESS_FINE_LOCATION");
-
     @Test
-    public void loginActivityTest() {
-        // Add a sleep statement to match the app's execution delay
+    public void registerUserTest() {
+
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction appCompatButton = onView(
+                allOf(withId(R.id.btn_not_a_member), withText("Not a member? Register here"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.CoordinatorLayout")),
+                                        0),
+                                5),
+                        isDisplayed()));
+        appCompatButton.perform(click());
+
+        try {
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         ViewInteraction appCompatEditText1 = onView(
+                allOf(withId(R.id.username),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatEditText1.perform(replaceText("test"), closeSoftKeyboard());
+
+        ViewInteraction appCompatEditText2 = onView(
                 allOf(withId(R.id.email),
                         childAtPosition(
                                 childAtPosition(
@@ -57,10 +83,9 @@ public class LoginActivityTestSuccess {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText1.perform(replaceText("test@outlook.com"), closeSoftKeyboard());
+        appCompatEditText2.perform(replaceText("test@outlook.com"), closeSoftKeyboard());
 
-
-        ViewInteraction appCompatEditText2 = onView(
+        ViewInteraction appCompatEditText3 = onView(
                 allOf(withId(R.id.password),
                         childAtPosition(
                                 childAtPosition(
@@ -68,20 +93,22 @@ public class LoginActivityTestSuccess {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("password"), closeSoftKeyboard());
+        appCompatEditText3.perform(replaceText("password"), closeSoftKeyboard());
 
-        ViewInteraction appCompatButton = onView(
-                allOf(withId(R.id.btn_login), withText("Log in"),
+        ViewInteraction appCompatButton2 = onView(
+                allOf(withId(R.id.btn_register), withText("Register"),
                         childAtPosition(
                                 childAtPosition(
                                         withClassName(is("android.support.design.widget.CoordinatorLayout")),
                                         0),
-                                3),
+                                4),
                         isDisplayed()));
-        appCompatButton.perform(click());
+        appCompatButton2.perform(click());
 
+        // After an invalid log in has been entered, assert that the app does not transition to the Main Activity
+        // by checking if the log in button is still visible after 2 seconds
         try {
-            Thread.sleep(3000);
+            Thread.sleep(7000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

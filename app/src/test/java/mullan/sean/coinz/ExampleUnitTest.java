@@ -1,7 +1,7 @@
 package mullan.sean.coinz;
 
 import org.junit.Test;
-
+import mullan.sean.coinz.RegisterActivity;
 import static org.junit.Assert.*;
 
 /**
@@ -15,3 +15,4 @@ public class ExampleUnitTest {
         assertEquals(4, 2 + 2);
     }
 }
+
