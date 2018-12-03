@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     private void getUserDocument(final String uid) {
         DocumentReference   docRef = mFirestore.collection("users").document(uid);
         CollectionReference collRef = mFirestore.collection("users");
-        Data.init(docRef, collRef);
+        Data.init(docRef, collRef, testMode);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
@@ -180,8 +180,15 @@ public class MainActivity extends AppCompatActivity {
                 mUserDoc = document;
                 Data.setUserDocSnap(document);
 
-                mLastSavedDate = mUserDoc.getString("lastSavedDate");
-                mCurrentDate   = getCurrentDate();
+                // If the app is in testing mode, set the last saved date to 0000/00/00 to
+                // ensure that the last saved date and current date are not equal. This will
+                // make the app run through the full procedure of a new day beginning
+                if (!testMode) {
+                    mLastSavedDate = mUserDoc.getString("lastSavedDate");
+                } else {
+                    mLastSavedDate = "0000/00/00";
+                }
+                mCurrentDate = getCurrentDate();
 
                 if (mLastSavedDate == null || mCurrentDate == null) {
                     Log.d(TAG, "Saved date or current date is null");
@@ -364,7 +371,12 @@ public class MainActivity extends AppCompatActivity {
     private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
         String mapJson = "/coinzmap.geojson";
-        String url = mapUrl + getCurrentDate() + mapJson;
+        String url;
+        if (testMode) {
+            url = mapUrl + "2018/01/01" + mapJson;
+        } else {
+            url = mapUrl + mCurrentDate + mapJson;
+        }
         DownloadFileTask downloadTask = new DownloadFileTask(new OnEventListener<String>() {
             @Override
             public void onSuccess(String result) {

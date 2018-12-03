@@ -70,11 +70,14 @@ public final class Data {
     private static int                    mFriendTransferCount;
     private static int                    mBankTransferCount;
 
+    // TESTING MODE FLAG
+    private static boolean testMode;
+
     /*
      *  @brief  { Initialise the document reference that will be used to identify
      *            the users document within firebase, and initialise local variables }
      */
-    public static void init(DocumentReference docRef, CollectionReference collRef) {
+    public static void init(DocumentReference docRef, CollectionReference collRef, boolean test) {
         mUsersRef             = collRef;
         mUserDocRef           = docRef;
         mExchangeRates        = new HashMap<>();
@@ -93,6 +96,7 @@ public final class Data {
         mUncollectedCoinCount = 0;
         mFriendTransferCount  = 0;
         mBankTransferCount    = 0;
+        testMode              = test;
     }
 
     public static void setUserDocSnap(DocumentSnapshot docSnap) {
@@ -184,14 +188,16 @@ public final class Data {
      */
     public static void setRates(HashMap<String,Double> rates) {
         mExchangeRates = rates;
-        mUsersRef.document("rates").set(rates)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "[setRates] successful");
-                    } else {
-                        Log.d(TAG, "[setRates] failed");
-                    }
-                });
+        if (!testMode) {
+            mUsersRef.document("rates").set(rates)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "[setRates] successful");
+                        } else {
+                            Log.d(TAG, "[setRates] failed");
+                        }
+                    });
+        }
     }
 
     /*

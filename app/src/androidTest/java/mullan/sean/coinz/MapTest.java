@@ -29,7 +29,7 @@ public class MapTest {
     @Test
     public void testMap() {
         try {
-            Thread.sleep(10000);
+            Thread.sleep(50000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
