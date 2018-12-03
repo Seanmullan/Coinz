@@ -19,6 +19,9 @@ public class LoginActivity extends AppCompatActivity {
     private EditText     mFieldEmail;
     private EditText     mFieldPassword;
 
+    // TESTING MODE FLAG
+    private boolean testMode;
+
     /*
      *  @brief  { Set log in view, create listeners for buttons and parse
      *            entered user data }
@@ -27,12 +30,25 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            testMode = extras.getBoolean("testMode");
+        } else {
+            testMode = false;
+        }
+
         // Get Firebase authentication instance
         mAuth = FirebaseAuth.getInstance();
 
         // Check if user is already logged in
         if (mAuth.getCurrentUser() != null) {
-            proceedToActivity(MainActivity.class);
+            Intent intent = new Intent(this, MainActivity.class);
+            if (testMode) {
+                intent.putExtra("testMode", true);
+            } else {
+                intent.putExtra("testMode", false);
+            }
+            startActivity(intent);
             finish();
         }
 
@@ -57,9 +73,11 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        btnRegister.setOnClickListener(v -> proceedToActivity(RegisterActivity.class));
+        btnRegister.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class)));
 
-        btnResetPassword.setOnClickListener(v -> proceedToActivity(ResetPasswordActivity.class));
+        btnResetPassword.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class)));
     }
 
     /*
@@ -95,22 +113,19 @@ public class LoginActivity extends AppCompatActivity {
                         task -> {
                             mProgressBar.setVisibility(View.GONE);
                             if (task.isSuccessful()) {
-                                proceedToActivity(MainActivity.class);
+                                //proceedToActivity(MainActivity.class);
+                                Intent intent = new Intent(this, MainActivity.class);
+                                if (testMode) {
+                                    intent.putExtra("testMode", true);
+                                } else {
+                                    intent.putExtra("testMode", false);
+                                }
+                                startActivity(intent);
                                 finish();
                             } else {
                                 displayToast(getString(R.string.auth_failed));
                             }
                         });
-    }
-
-    /*
-     *  @brief { Start new activity }
-     *
-     *  @params { Class of intended activity }
-     */
-    private void proceedToActivity(Class activity) {
-        Intent intent = new Intent(this, activity);
-        startActivity(intent);
     }
 
     /*

@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private String            mLastSavedDate;
     private String            mCurrentDate;
 
+    // TESTING MODE FLAG
+    private boolean testMode;
+
     /*
      *  @brief  { Set main activity view, load in map fragment as default
      *            and create a listener for the user authentication state }
@@ -47,6 +50,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            testMode = extras.getBoolean("testMode");
+        }
+        Log.d(TAG, "TESTING MODE:" + testMode);
 
         // Get firestore and authentication references
         mFirestore = FirebaseFirestore.getInstance();
@@ -243,7 +252,6 @@ public class MainActivity extends AppCompatActivity {
      *           Note: We have to retrieve the existing data regardless, as the ID's
      *           are required in order to identify which coins we want to remove }
      */
-    @SuppressWarnings("unchecked")
     private void populateData() {
 
         // If a new day has not begun, then retrieve the existing exchange rates. If a new
