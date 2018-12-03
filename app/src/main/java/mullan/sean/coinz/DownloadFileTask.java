@@ -13,8 +13,6 @@ import java.net.URL;
 public class DownloadFileTask extends AsyncTask<String, Void, String> {
 
     private OnEventListener<String> mCallBack;
-    public Exception mException;
-
 
     /*
      *  @brief  { Constructor that initialises the callback listener }
@@ -78,13 +76,11 @@ public class DownloadFileTask extends AsyncTask<String, Void, String> {
      */
     @Override
     protected void onPostExecute(String result) {
-        super.onPostExecute(result);
-        if (mCallBack != null) {
-            if (mException == null) {
-                mCallBack.onSuccess(result);
-            } else {
-                mCallBack.onFailure(mException);
-            }
+        if (result != null) {
+            super.onPostExecute(result);
+            mCallBack.onSuccess(result);
+        } else {
+            mCallBack.onFailure(new NullPointerException());
         }
     }
 }
