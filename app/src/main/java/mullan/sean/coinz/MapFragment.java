@@ -53,13 +53,14 @@ public class MapFragment extends Fragment implements
     private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
     private static MapboxMap            map;
     private static boolean              mBonusUsed;
+    private static boolean              mMapBoxConnected;
 
-    private FloatingActionButton        btnBonus;
-    private CardView                    txtBonus;
-    private TextView                    txtTimer;
-    private LatLng                      mCurrentLocation;
-    private MapView                     mapView;
-    private LocationEngine              locationEngine;
+    private FloatingActionButton btnBonus;
+    private CardView             txtBonus;
+    private TextView             txtTimer;
+    private LatLng               mCurrentLocation;
+    private MapView              mapView;
+    private LocationEngine       locationEngine;
 
     /**
      *   Required empty public constructor
@@ -98,6 +99,8 @@ public class MapFragment extends Fragment implements
         txtBonus = view.findViewById(R.id.double_value);
         txtTimer = view.findViewById(R.id.timer);
 
+        mMapBoxConnected = false;
+
         // Get Mapbox instance
         Mapbox.getInstance(inflater.getContext(), getString(R.string.access_token));
         mapView = view.findViewById(R.id.mapboxMapView);
@@ -116,7 +119,11 @@ public class MapFragment extends Fragment implements
         Log.d(TAG, "[updateMapData] before fetch - size = " + mUncollectedCoins.size());
         mUncollectedCoins = Data.getUncollectedCoins();
         Log.d(TAG, "[updateMapData] after fetch - size = " + mUncollectedCoins.size());
-        updateMarkers(context);
+        if (mMapBoxConnected) {
+            updateMarkers(context);
+        } else {
+            Log.d(TAG, "[updateMapData] mapBox not connected yet");
+        }
     }
 
     /**
@@ -170,6 +177,7 @@ public class MapFragment extends Fragment implements
             Log.d(TAG, "[onMapReady] mapBox is null");
         } else {
             Log.d(TAG, "[onMapReady] mapBox is ready");
+            mMapBoxConnected = true;
             map = mapboxMap;
             map.getUiSettings().setCompassEnabled(true);
             map.getUiSettings().setZoomControlsEnabled(true);

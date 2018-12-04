@@ -29,11 +29,11 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
-/*
- *  @brief  { This class tests a failed log in i.e. a non-existent user account. Before running,
- *            ensure that a user is not already logged in }
+/**
+ *  This class tests the following failed log in criteria:
+ *      1) Non existant user account (i.e. non-existent or incorrect email address)
+ *      2) Incorrect password for existing email address
  */
-
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class LoginTestFail {
@@ -42,7 +42,7 @@ public class LoginTestFail {
     public ActivityTestRule<LoginActivity> mActivityTestRule = new ActivityTestRule<>(LoginActivity.class);
 
     @Test
-    public void loginTestFail() {
+    public void nonExistentAccount() {
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
@@ -68,6 +68,63 @@ public class LoginTestFail {
                                 0),
                         isDisplayed()));
         appCompatEditText2.perform(replaceText("invalid"), closeSoftKeyboard());
+
+        ViewInteraction appCompatButton = onView(
+                allOf(withId(R.id.btn_login), withText("Log in"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.CoordinatorLayout")),
+                                        0),
+                                3),
+                        isDisplayed()));
+        appCompatButton.perform(click());
+
+        // After an invalid log in has been entered, assert that the app does not transition to the Main Activity
+        // by checking if the log in button is still visible after 2 seconds
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction button = onView(
+                allOf(withId(R.id.btn_login),
+                        childAtPosition(
+                                childAtPosition(
+                                        IsInstanceOf.instanceOf(android.view.ViewGroup.class),
+                                        0),
+                                3),
+                        isDisplayed()));
+        button.check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void incorrectPassword() {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction appCompatEditText1 = onView(
+                allOf(withId(R.id.email),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatEditText1.perform(replaceText("test@outlook.com"), closeSoftKeyboard());
+
+        ViewInteraction appCompatEditText2 = onView(
+                allOf(withId(R.id.password),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatEditText2.perform(replaceText("incorrect"), closeSoftKeyboard());
 
         ViewInteraction appCompatButton = onView(
                 allOf(withId(R.id.btn_login), withText("Log in"),

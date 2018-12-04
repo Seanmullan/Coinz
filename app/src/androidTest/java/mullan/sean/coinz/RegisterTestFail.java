@@ -29,10 +29,15 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
-/*
- *  @brief  { This class tests tests the attempt to register a user that already exists }
- */
 
+/**
+ *  This class tests tests the following criteria of a failed registration:
+ *   1) No fields filled in
+ *   2) No username filled in
+ *   3) Password too short (< 6 characters)
+ *   4) Attempt to register an existing email
+ *   5) Attempt to register an existing username
+ */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class RegisterTestFail {

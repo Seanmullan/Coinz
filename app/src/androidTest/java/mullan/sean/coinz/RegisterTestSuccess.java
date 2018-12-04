@@ -12,11 +12,14 @@ import android.view.ViewParent;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
@@ -28,9 +31,13 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
-/*
- *  @brief  { This class tests tests the successful registration of a test user with details:
- *            Username: test, Email: test@outlook.com, Password: password }
+/**
+ *  This class tests tests the successful registration of a test user with details:
+ *  Username: test, Email: test@outlook.com, Password: password.
+ *  Test is determined a success if the program can register the user, then log out
+ *  and be shown the log in screen.
+ *
+ *  NOTE: Before running, ensure that the "test@outlook.com" user is deleted from firebase
  */
 
 @LargeTest
@@ -105,24 +112,39 @@ public class RegisterTestSuccess {
                         isDisplayed()));
         appCompatButton2.perform(click());
 
-        // After an invalid log in has been entered, assert that the app does not transition to the Main Activity
-        // by checking if the log in button is still visible after 2 seconds
         try {
-            Thread.sleep(7000);
+            Thread.sleep(4000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        ViewInteraction textView = onView(
-                allOf(withText("Coinz"),
+        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());
+
+        ViewInteraction appCompatTextView = onView(
+                allOf(withId(R.id.title), withText("Log out"),
                         childAtPosition(
-                                allOf(withId(R.id.my_toolbar),
-                                        childAtPosition(
-                                                withId(R.id.container),
-                                                0)),
+                                childAtPosition(
+                                        withClassName(is("android.support.v7.view.menu.ListMenuItemView")),
+                                        0),
                                 0),
                         isDisplayed()));
-        textView.check(matches(isDisplayed()));
+        appCompatTextView.perform(click());
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction button = onView(
+                allOf(withId(R.id.btn_login),
+                        childAtPosition(
+                                childAtPosition(
+                                        IsInstanceOf.instanceOf(android.view.ViewGroup.class),
+                                        0),
+                                3),
+                        isDisplayed()));
+        button.check(matches(isDisplayed()));
     }
 
     private static Matcher<View> childAtPosition(
