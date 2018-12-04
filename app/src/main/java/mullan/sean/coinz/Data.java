@@ -15,12 +15,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ *  This class serves as the applications global data structure that stores the relevant data
+ *  accessible from all fragments so that no two fragments have to communicate between each
+ *  other. These methods handle all uploading to and downloading from firebase.
+ */
 public final class Data {
 
-    /*
-     *  This class serves as a global data structure that uploads and downloads from
-     *  the firebase database. Most of the variables are hopefully self explanatory,
-     *  however I've explain the bottom four which are more ambiguous:
+    /*  Most of the variables are hopefully self explanatory, however I've explained the bottom
+     *  four which are more ambiguous:
      *
      *  mCollectedTransferred:  The amount of collected coins (only collected, not received) the
      *                          user has transferred into their bank account on the current day
@@ -73,9 +76,9 @@ public final class Data {
     // TESTING MODE FLAG
     private static boolean testMode;
 
-    /*
-     *  @brief  { Initialise the document reference that will be used to identify
-     *            the users document within firebase, and initialise local variables }
+    /**
+     *  Initialise the document reference that will be used to identify
+     *  the users document within firebase, and initialise local variables
      */
     public static void init(DocumentReference docRef, CollectionReference collRef, boolean test) {
         mUsersRef             = collRef;
@@ -183,8 +186,8 @@ public final class Data {
         }
     }
 
-    /*
-     *  @brief  { Sets exchange rates HashMap and uploads rates data to firebase }
+    /**
+     *  Sets exchange rates HashMap and uploads rates data to firebase
      */
     public static void setRates(HashMap<String,Double> rates) {
         mExchangeRates = rates;
@@ -200,9 +203,9 @@ public final class Data {
         }
     }
 
-    /*
-     *  @brief  { Sets the flag that indicates whether or not the user has used their
-     *            daily bonus }
+    /**
+     *  Sets the flag that indicates whether or not the user has used their
+     *  daily bonus
      */
     public static void setBonusUsed(boolean bonusUsed) {
         mBonusUsed = bonusUsed;
@@ -216,9 +219,9 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Resets the count of the number of collected coins the user has transferred
-     *            into their bank account for the present day }
+    /**
+     *  Resets the count of the number of collected coins the user has transferred
+     *  into their bank account for the present day
      */
     public static void clearCollectedTransferred() {
         mCollectedTransferred = 0;
@@ -232,9 +235,9 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Retrieves rates data from firebase and sets the exchange rates
-     *            HashMap, and informs caller of success or failure }
+    /**
+     *  Retrieves rates data from firebase and sets the exchange rates
+     *  HashMap, and informs caller of success or failure
      */
     public static void retrieveExchangeRates(OnEventListener<String> event) {
         mUsersRef.document("rates").get()
@@ -255,14 +258,14 @@ public final class Data {
     }
 
 
-    /*
-     *  @brief  { This procedure fetches all documents within the specified collection
-     *            argument. It identifies the collection and stores the retrieved coins
-     *            in their respective ArrayLists. The caller is notified if the procedure
-     *            was a success or failure. In the case of received coins, this list will
-     *            be updated every time the user goes into their wallet (so it is up to date
-     *            if they have received coins from someone), so we add the coin to the received
-     *            list if it does not already exist there }
+    /**
+     *  This procedure fetches all documents within the specified collection
+     *  argument. It identifies the collection and stores the retrieved coins
+     *  in their respective ArrayLists. The caller is notified if the procedure
+     *  was a success or failure. In the case of received coins, this list will
+     *  be updated every time the user goes into their wallet (so it is up to date
+     *  if they have received coins from someone), so we add the coin to the received
+     *  list if it does not already exist there
      */
     public static void retrieveAllCoinsFromCollection(final String collection,
                                                       final OnEventListener<String> event) {
@@ -296,9 +299,9 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { This procedure removes all documents within the specified collection
-     *            argument, and removes the coin from the corresponding ArrayList }
+    /**
+     *  This procedure removes all documents within the specified collection
+     *  argument, and removes the coin from the corresponding ArrayList
      */
     public static void clearAllCoinsFromCollection(String collection) {
         Log.d(TAG, "[clearAllCoinsFromCollection] clearing coins from " + collection);
@@ -324,13 +327,13 @@ public final class Data {
         }
     }
 
-    /*
-     *  @brief  { The specified coin is added to the specified collection and corresponding
-     *            ArrayList. If the specified collection is "uncollected", then the method
-     *            informs the caller of the number of uncollected coins it has currently
-     *            added. This is so the caller can identify when all of it's uncollected
-     *            coins have successfully been added to firebase. The method also informs
-     *            the caller if the document fails to upload }
+    /**
+     *  The specified coin is added to the specified collection and corresponding
+     *  ArrayList. If the specified collection is "uncollected", then the method
+     *  informs the caller of the number of uncollected coins it has currently
+     *  added. This is so the caller can identify when all of it's uncollected
+     *  coins have successfully been added to firebase. The method also informs
+     *  the caller if the document fails to upload
      */
     public static void addCoinToCollection(final Coin coin,
                                            final String collection,
@@ -363,12 +366,12 @@ public final class Data {
                 }).addOnFailureListener(event::onFailure);
     }
 
-    /*
-     *  @brief  { Removes the document corresponding to the coin argument in the specified
-     *            collection, and the coin is also removed from the corresponding ArrayList.
-     *            The caller is notified when the procedure has finished. This method returns
-     *            the number of coins that have been removed from a collection for a bank
-     *            transfer, however only the Wallet fragment will use this number }
+    /**
+     *  Removes the document corresponding to the coin argument in the specified
+     *  collection, and the coin is also removed from the corresponding ArrayList.
+     *  The caller is notified when the procedure has finished. This method returns
+     *  the number of coins that have been removed from a collection for a bank
+     *  transfer, however only the Wallet fragment will use this number
      */
     public static void removeCoinFromCollection(Coin coin,
                                                 final String collection,
@@ -400,12 +403,12 @@ public final class Data {
         });
     }
 
-    /*
-     *  @brief  { Retrieves all documents in the users friends subcollection, then creates a
-     *            User object for each document and stores the object in an ArrayList if the
-     *            friend does not already exist in the list (this case arises when friends
-     *            fragment calls this method to retrieve the most up to date friends list).
-     *            Caller is notified when procedure is complete }
+    /**
+     *  Retrieves all documents in the users friends subcollection, then creates a
+     *  User object for each document and stores the object in an ArrayList if the
+     *  friend does not already exist in the list (this case arises when friends
+     *  fragment calls this method to retrieve the most up to date friends list).
+     *  Caller is notified when procedure is complete
      */
     public static void retrieveAllFriends(OnEventListener<String> event) {
         Log.d(TAG, "[retrieveAllFriends] retrieving friends");
@@ -427,12 +430,12 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Retrieves all documents in the users requests subcollection, then creates a
-     *            User object for each document and stores the object in an ArrayList if the
-     *            request does not already exist in the list (this case arises when friends
-     *            fragment calls this method to retrieve the most up to date requests list).
-     *            Caller is notified when procedure is complete }
+    /**
+     *  Retrieves all documents in the users requests subcollection, then creates a
+     *  User object for each document and stores the object in an ArrayList if the
+     *  request does not already exist in the list (this case arises when friends
+     *  fragment calls this method to retrieve the most up to date requests list).
+     *  Caller is notified when procedure is complete
      */
     public static void retrieveAllRequests(OnEventListener<String> event) {
         Log.d(TAG, "[retrieveAllRequests] retrieving friend requests");
@@ -454,10 +457,10 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Retrieves all documents in the users transactions subcollection,
-     *            then creates a Transaction object for each document and stores
-     *            the objects in an ArrayList }
+    /**
+     *  Retrieves all documents in the users transactions subcollection,
+     *  then creates a Transaction object for each document and stores
+     *  the objects in an ArrayList
      */
     public static void retrieveAllTransactions() {
         Log.d(TAG, "[retrieveAllTransactions] retrieving transactions");
@@ -474,11 +477,11 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Performs three steps to accept a friend request:
-     *             1) Remove friend from users requests subcollection
-     *             2) Add friend to users friends subcollection
-     *             3) Add user to the requester's friends subcollection }
+    /**
+     *  Performs three steps to accept a friend request:
+     *   1) Remove friend from users requests subcollection
+     *   2) Add friend to users friends subcollection
+     *   3) Add user to the requester's friends subcollection
      */
     public static void acceptFriendRequest(User friend) {
         // Remove friend from users requests subcollection
@@ -527,8 +530,8 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  {  Removes friend requester from users requests subcollection }
+    /**
+     *   Removes friend requester from users requests subcollection
      */
     public static void declineFriendRequest(User friend) {
         mRequests.remove(friend);
@@ -545,10 +548,10 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Performs query to locate user with the specified email address. When
-     *            located, the requester (this user) will be placed in the located users
-     *            "requests" subcollection }
+    /**
+     *  Performs query to locate user with the specified email address. When
+     *  located, the requester (this user) will be placed in the located users
+     *  "requests" subcollection
      */
     public static void sendFriendRequest(String email, OnEventListener<String> event) {
         // Perform query to find user with specified email address
@@ -592,14 +595,14 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Removes coin from the collection it currently exists in, then places coin
-     *            in the received subcollection of the specified friend. A random ID will be
-     *            generated for the coin document. This is to avoid duplicate coin ID's in the
-     *            case that two players send the same coin to a third player. Upon successful
-     *            completion of sending the coin, the method caller is provided with the number
-     *            of coins that have currently been transferred - this is so the caller can
-     *            identify when all coins have been transferred }
+    /**
+     *  Removes coin from the collection it currently exists in, then places coin
+     *  in the received subcollection of the specified friend. A random ID will be
+     *  generated for the coin document. This is to avoid duplicate coin ID's in the
+     *  case that two players send the same coin to a third player. Upon successful
+     *  completion of sending the coin, the method caller is provided with the number
+     *  of coins that have currently been transferred - this is so the caller can
+     *  identify when all coins have been transferred
      */
     public static void sendCoinToFriend(User friend, Coin coin, String collection,
                                         OnEventListener<Integer> event) {
@@ -622,11 +625,11 @@ public final class Data {
         });
     }
 
-    /*
-     *  @brief  { Updates the number of collected coins that the user has transferred into their
-     *            bank account for the current day, adds the value of gold from the transaction
-     *            to the current value of gold, then updates this value on the users document. The
-     *            transaction object is then added to the users transactions subcollection }
+    /**
+     *  Updates the number of collected coins that the user has transferred into their
+     *  bank account for the current day, adds the value of gold from the transaction
+     *  to the current value of gold, then updates this value on the users document. The
+     *  transaction object is then added to the users transactions subcollection
      */
     public static void addTransaction(Transaction transaction, int numberProcessed,
                                       String collection) {
@@ -663,10 +666,10 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Finds all users from firebase, and an object is then created for each user
-     *            so they can be placed on the global leader board. If the user is also in the
-     *            friends list, then they are added to the friends leader board }
+    /**
+     *  Finds all users from firebase, and an object is then created for each user
+     *  so they can be placed on the global leader board. If the user is also in the
+     *  friends list, then they are added to the friends leader board
      */
     public static void retrieveLeaderBoard(OnEventListener<String> event) {
         Log.d(TAG, "[retrieveLeaderBoard] retrieving leader board");
@@ -693,10 +696,10 @@ public final class Data {
                 });
     }
 
-    /*
-     *  @brief  { Creates a coin object from the document data }
+    /**
+     *  Creates a coin object from the document data
      *
-     *  @return { Coin object }
+     *  @return Coin object
      */
     private static Coin documentToCoin(QueryDocumentSnapshot doc) {
         Map<String, Object> coinData = doc.getData();
@@ -709,12 +712,12 @@ public final class Data {
         return new Coin(id, value, currency, location);
     }
 
-    /*
-     *  @brief  { Creates a user object from the document data. Adds check for null value of
-     *            gold - this is because the friends and requests subcollection's only contain
-     *            username and email, so we ignore the value of gold by setting it to 0 }
+    /**
+     *  Creates a user object from the document data. Adds check for null value of
+     *  gold - this is because the friends and requests subcollection's only contain
+     *  username and email, so we ignore the value of gold by setting it to 0
      *
-     *  @return { User object }
+     *  @return User object
      */
     private static User documentToUser(QueryDocumentSnapshot doc) {
         Map<String, Object> userData = doc.getData();
@@ -728,10 +731,10 @@ public final class Data {
         return new User(uid, username, email, gold);
     }
 
-    /*
-     *  @brief  { Creates a transaction object from the document data }
+    /**
+     *  Creates a transaction object from the document data
      *
-     *  @return { Transaction object }
+     *  @return Transaction object
      */
     private static Transaction documentToTransaction(QueryDocumentSnapshot doc) {
         Map<String, Object> transData = doc.getData();
@@ -740,8 +743,8 @@ public final class Data {
         return new Transaction(gold, date);
     }
 
-    /*
-     *  @brief  { Updates the "lastSavedDate" field on firebase }
+    /**
+     *  Updates the "lastSavedDate" field on firebase
      */
     public static void updateDate(String date) {
         Log.d(TAG, "[updateDate] updating date");

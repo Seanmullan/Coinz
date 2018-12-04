@@ -16,20 +16,28 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Fragment that hosts bank details, including amount of gold in users account, the current
+ *   days exchange rates, and the user's transaction history.
+ */
 public class BankFragment extends Fragment {
 
-    /*
-     *  @brief  { Required empty public constructor }
+    /**
+     *   Required empty public constructor
      */
     public BankFragment() {}
 
+    /**
+     *   Invoke onCreate() of superclass
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    /*
-     *  @brief  { Invoke onCreate of superclass }
+    /**
+     *   Inflates the layout for the bank fragment by attaching the users gold amount, exchange rates,
+     *   and transaction history. Transactions are sorted by date in descending order.
      */
     @Override
     public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
@@ -81,16 +89,25 @@ public class BankFragment extends Fragment {
         return view;
     }
 
+    /**
+     *   Invoke onStart() of superclass
+     */
     @Override
     public void onStart() {
         super.onStart();
     }
 
+    /**
+     *   Invoke onResume() of superclass
+     */
     @Override
     public void onResume() {
         super.onResume();
     }
 
+    /**
+     *   Invoke onPause() of superclass
+     */
     @Override
     public void onPause() {
         super.onPause();

@@ -17,6 +17,9 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Adapter class to store Coin objects
+ */
 public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> {
 
     private static final String TAG = "C_COIN_ADAPTER";
@@ -24,13 +27,13 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
     private ArrayList<Coin> mCoins;
     private Context mContext;
 
-    /*
-     *  @brief  { Provides a reference to the views for each data item }
+    /**
+     *   Provides a reference to the views for each data item (currency, value and coin image).
      */
-    public static class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView  mCurrency, mValue;
-        public ImageView mCoinImage;
-        public MyViewHolder(View view) {
+    static class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView  mCurrency, mValue;
+        ImageView mCoinImage;
+        MyViewHolder(View view) {
             super(view);
             mCurrency = view.findViewById(R.id.currency);
             mValue    = view.findViewById(R.id.value);
@@ -38,16 +41,17 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
         }
     }
 
-    /*
-     *  @brief  { Adapter constructor }
+    /**
+     * @param coins ArrayList of coins
+     * @param context Application context
      */
-    public CoinAdapter(ArrayList<Coin> coins, Context context) {
+    CoinAdapter(ArrayList<Coin> coins, Context context) {
         this.mCoins = coins;
         this.mContext = context;
     }
 
-    /*
-     *  @brief  { Create new views (invoked by the layout manager) }
+    /**
+     *  Inflate layout of list of coins (invoked by layout manager)
      */
     @Override
     @Nonnull
@@ -57,8 +61,8 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
         return new MyViewHolder(itemView);
     }
 
-    /*
-     *  @brief  { Replace the contents of a view (invoked by the layout manager) }
+    /**
+     *   Bind the coin data to the specified row in the coin list (invoked by the layout manager)
      */
     @Override
     public void onBindViewHolder(@Nonnull MyViewHolder holder, int position) {
@@ -93,8 +97,8 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.MyViewHolder> 
         }
     }
 
-    /*
-     *  @return  { Size of your coin ArrayList (invoked by the layout manager) }
+    /**
+     *  @return  Size of your coin ArrayList (invoked by the layout manager)
      */
     @Override
     public int getItemCount() {

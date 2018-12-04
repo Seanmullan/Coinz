@@ -5,6 +5,11 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *   A Coin object stores the id, value, currency and location of the coin. It also stores
+ *   a flag which indicates whether or not the coin has been selected in the users local
+ *   wallet.
+ */
 public class Coin {
 
     private String  id;
@@ -13,7 +18,7 @@ public class Coin {
     private LatLng  location;
     private boolean isSelected;
 
-    public Coin(String id, double value, String currency, LatLng location) {
+    Coin(String id, double value, String currency, LatLng location) {
         this.id         = id;
         this.value      = value;
         this.currency   = currency;
@@ -37,20 +42,20 @@ public class Coin {
         return currency;
     }
 
-    public LatLng getLocation() {
+    LatLng getLocation() {
         return location;
     }
 
-    public boolean isSelected() {
+    boolean isSelected() {
         return isSelected;
     }
 
-    public void setSelected(boolean selected) {
+    void setSelected(boolean selected) {
         isSelected = selected;
     }
 
-    /*
-     *  @return  { True if and only if ID's are equal }
+    /**
+     *  @return True if and only if ID's are equal
      */
     @Override
     public boolean equals(Object coin) {
@@ -61,10 +66,10 @@ public class Coin {
         }
     }
 
-    /*
-     *  @return { Returns Map of coin data }
+    /**
+     *  @return Returns Map of Coin data
      */
-    public Map<String,Object> getCoinMap() {
+    Map<String,Object> getCoinMap() {
         Map<String,Object> coinData = new HashMap<>();
         coinData.put("value", this.value);
         coinData.put("currency", this.currency);
