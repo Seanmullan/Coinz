@@ -41,6 +41,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Fragment that hosts the MapBox map and Coin objects which are displayed as markers
+ */
 public class MapFragment extends Fragment implements
         OnMapReadyCallback, LocationEngineListener, PermissionsListener {
 
@@ -50,6 +53,7 @@ public class MapFragment extends Fragment implements
     private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
     private static MapboxMap            map;
     private static boolean              mBonusUsed;
+
     private FloatingActionButton        btnBonus;
     private CardView                    txtBonus;
     private TextView                    txtTimer;
@@ -57,22 +61,22 @@ public class MapFragment extends Fragment implements
     private MapView                     mapView;
     private LocationEngine              locationEngine;
 
-    /*
-     *  @brief  { Required empty public constructor }
+    /**
+     *   Required empty public constructor
      */
     public MapFragment(){}
 
-    /*
-     *  @brief  { Invoke onCreate of superclass }
+    /**
+     *   Invoke onCreate of superclass
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    /*
-     *  @brief  { Inflates the view for Mapbox, and fetches the uncollected coin data
-     *            from the Data class }
+    /**
+     *   Inflates the view for Mapbox, and fetches the uncollected coin data
+     *   from the Data class
      */
     @Override
     public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
@@ -102,9 +106,9 @@ public class MapFragment extends Fragment implements
         return view;
     }
 
-    /*
-     *  @brief  { Fetches uncollected coins from the Data class, then updates the
-     *            coin markers on the map }
+    /**
+     *   Fetches uncollected coins from the Data class, then updates the
+     *   coin markers on the map
      */
     public static void updateMapData(Context context) {
         mBonusUsed = Data.getBonusUsed();
@@ -115,8 +119,8 @@ public class MapFragment extends Fragment implements
         updateMarkers(context);
     }
 
-    /*
-     *  @brief  { Opens dialog with user to start their daily bonus }
+    /**
+     *   Opens dialog with user to start their daily bonus
      */
     private void startDailyBonus() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
@@ -126,10 +130,10 @@ public class MapFragment extends Fragment implements
         builder.show();
     }
 
-    /*
-     *  @brief  { Begins the 120 second bonus timer, during which all coins are doubled in
-     *            value. The bonus flags and the view are set, and the seconds remaining
-     *            are displayed to the user }
+    /**
+     *   Begins the 120 second bonus timer, during which all coins are doubled in
+     *   value. The bonus flags and the view are set, and the seconds remaining
+     *   are displayed to the user
      */
     private void beginBonusTimer() {
         Log.d(TAG, "[beginBonusTimer] bonus timer activated");
@@ -153,12 +157,12 @@ public class MapFragment extends Fragment implements
         }.start();
     }
 
-    /*
-     *  @brief  { Implements callback for Mapbox. If map is not null, initialise map
-     *            variable and enable the devices location. Also update the markers
-     *            in case updateMapData() is called before the map is ready e.g. this
-     *            is likely to happen if the user loads the app, switches to another
-     *            fragment then returns to the Map fragment }
+    /**
+     *   Implements callback for Mapbox. If map is not null, initialise map
+     *   variable and enable the devices location. Also update the markers
+     *   in case updateMapData() is called before the map is ready e.g. this
+     *   is likely to happen if the user loads the app, switches to another
+     *   fragment then returns to the Map fragment
      */
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
@@ -174,9 +178,9 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Implements callback for permissions listener. If permissions have been
-     *            granted, enable devices location, otherwise prompt user to grant permission }
+    /**
+     *   Implements callback for permissions listener. If permissions have been
+     *   granted, enable devices location, otherwise prompt user to grant permission
      */
     @Override
     public void onPermissionResult(boolean granted) {
@@ -188,9 +192,9 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief { Implements callback function for permissions listener. Lists permissions
-     *           that user is required to grant for the application }
+    /**
+     *   Implements callback function for permissions listener. Lists permissions
+     *   that user is required to grant for the application
      */
     @Override
     public void onExplanationNeeded(List<String> permissionsToExplain) {
@@ -200,10 +204,10 @@ public class MapFragment extends Fragment implements
         displayToast(msg);
     }
 
-    /*
-     *  @brief  { If permissions have been granted, invoke the initialisation methods for
-     *            the location engine and location layer. Otherwise, prompt permissions
-     *            manager to request permissions }
+    /**
+     *   If permissions have been granted, invoke the initialisation methods for
+     *   the location engine and location layer. Otherwise, prompt permissions
+     *   manager to request permissions
      */
     private void enableLocation() {
         if (PermissionsManager.areLocationPermissionsGranted(getLayoutInflater().getContext())) {
@@ -217,8 +221,8 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Initialise location layer if MapView and MapboxMap are not null }
+    /**
+     *   Initialise location layer if MapView and MapboxMap are not null
      */
     private void initializeLocationLayer() {
         if (mapView == null) {
@@ -236,9 +240,9 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Initialises the location engine to update the location every 5 seconds,
-     *            with the fastest updates to be at most 1 second }
+    /**
+     *   Initialises the location engine to update the location every 5 seconds,
+     *   with the fastest updates to be at most 1 second
      */
     private void initializeLocationEngine() {
         locationEngine = new LocationEngineProvider(getLayoutInflater().getContext())
@@ -256,8 +260,8 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Implements callback function for location engine listener }
+    /**
+     *   Implements callback function for location engine listener
      */
     @Override
     public void onConnected() {
@@ -265,10 +269,10 @@ public class MapFragment extends Fragment implements
         locationEngine.requestLocationUpdates();
     }
 
-    /*
-     *  @brief  { When location has changed, location engine listener calls
-     *            this method. If the location is not null, then update the
-     *            location variable and adjust the camera position }
+    /**
+     *   When location has changed, location engine listener calls
+     *   this method. If the location is not null, then update the
+     *   location variable and adjust the camera position
      */
     @Override
     public void onLocationChanged(Location location) {
@@ -282,8 +286,8 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Sets camera position according to lat and long coordinates }
+    /**
+     *   Sets camera position according to lat and long coordinates
      */
     private void setCameraPosition(Location location) {
         LatLng latLng = new LatLng(location.getLatitude(),
@@ -291,9 +295,9 @@ public class MapFragment extends Fragment implements
         map.animateCamera(CameraUpdateFactory.newLatLng(latLng));
     }
 
-    /*
-     *  @brief  { Populates the map with markers that represent coins. Each
-     *            coin is represented by its corresponding coin image }
+    /**
+     *   Populates the map with markers that represent coins. Each
+     *   coin is represented by its corresponding coin image
      */
     private static void updateMarkers(Context context) {
         Log.d(TAG, "[update markers] updating markers");
@@ -326,10 +330,10 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Checks the distance between the devices location and the location
-     *            of all uncollected coins. If the distance is less than or equal to
-     *            25 metres, then collect the coin }
+    /**
+     *   Checks the distance between the devices location and the location
+     *   of all uncollected coins. If the distance is less than or equal to
+     *   25 metres, then collect the coin
      */
     private void checkProximityToCoins() {
         for (Coin c : mUncollectedCoins) {
@@ -340,11 +344,11 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    /*
-     *  @brief  { Inform the user that they have collected a coin. If the bonus is active, double
-     *            the value of the coin. Then, remove the marker from the map and remove the coin
-     *            from the uncollected coins ArrayList. The coin will then be removed from the
-     *            Uncollected subcollection in firebase and placed in the Collected subcollection }
+    /**
+     *   Inform the user that they have collected a coin. If the bonus is active, double
+     *   the value of the coin. Then, remove the marker from the map and remove the coin
+     *   from the uncollected coins ArrayList. The coin will then be removed from the
+     *   Uncollected subcollection in firebase and placed in the Collected subcollection
      */
     private void collectCoin(Coin coin) {
 
@@ -385,27 +389,36 @@ public class MapFragment extends Fragment implements
         });
     }
 
-    /*
-     *  @brief  { Display message on device }
+    /**
+     *  Display message on device }
      *
-     *  @params { Message to be displayed }
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
+    /*
+     *  Invoke onStart() on MapView object
+     */
     @Override
     public void onStart() {
         super.onStart();
         mapView.onStart();
     }
 
+    /*
+     *  Invoke onResume() on MapView object
+     */
     @Override
     public void onResume() {
         super.onResume();
         mapView.onResume();
     }
 
+    /*
+     *  Invoke onPause() on MapView object
+     */
     @Override
     public void onPause() {
         super.onPause();

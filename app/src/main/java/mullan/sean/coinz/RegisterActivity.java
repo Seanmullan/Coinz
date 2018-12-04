@@ -20,6 +20,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *  Activity to register a user on Firebase
+ */
 public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "C_REG";
@@ -33,9 +36,9 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText            mFieldPassword;
     private boolean             mUsernameAvailable;
 
-    /*
-     *  @brief  { Display registration view, set listeners for buttons and
-     *            parse user entered data }
+    /**
+     *   Display registration view, set listeners for buttons and
+     *   parse user entered data
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,13 +95,15 @@ public class RegisterActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(v -> proceedToActivity(LoginActivity.class));
     }
 
-    /*
-     *  @brief   { Checks that fields have been filled and that password is at least
-     *             6 characters in length }
+    /**
+     *  Checks that fields have been filled and that password is at least
+     *  6 characters in length
      *
-     *  @params  { String username, String email, String password }
+     *  @param username Entered username
+     *  @param email    Entered email
+     *  @param password Entered password
      *
-     *  @return  { True if details are valid, false otherwise }
+     *  @return True if details are valid, false otherwise
      */
     private boolean detailsValid(String username, String email, String password) {
         if (TextUtils.isEmpty(username)) {
@@ -126,10 +131,10 @@ public class RegisterActivity extends AppCompatActivity {
         return true;
     }
 
-    /*
-     *  @brief  { Fetches all users in firebase and checks if the username entered has
-     *            already been taken by another user. Callback will return true if
-     *            username is available, and false otherwise }
+    /**
+     *   Fetches all users in firebase and checks if the username entered has
+     *   already been taken by another user. Callback will return true if
+     *   username is available, and false otherwise
      */
     private void checkUsernameAvailable(String username, OnEventListener<Boolean> event) {
         mUsersRef.get().addOnCompleteListener(task -> {
@@ -160,10 +165,10 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    /*
-     *  @brief  { Attempt to create a user account on firebase. If successful,
-     *            create document for user in database and proceed to the main
-     *            activity. If unsuccessful, print task exception.
+    /**
+     *   Attempt to create a user account on firebase. If successful,
+     *   create document for user in database and proceed to the main
+     *   activity. If unsuccessful, print task exception.
      */
     private void createUserAccount(final String username, final String email, String password) {
         Log.d(TAG, "[createUserAccount] creating user account...");
@@ -183,11 +188,12 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    /*
-     *  @brief  { Create a document for user in the database using the users unique ID
-     *            and add the required fields to the document }
+    /**
+     *  Create a document for user in the database using the users unique ID
+     *  and add the required fields to the document
      *
-     *  @params { Users username and email }
+     *  @param username Entered username
+     *  @param email    Entered password
      */
     private void addUserToDatabase(String username, String email) {
         Map<String, Object> userData = new HashMap<>();
@@ -208,20 +214,20 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    /*
-     *  @brief { Start new activity }
+    /**
+     *  Start new activity
      *
-     *  @params { Class of intended activity }
+     *  @param activity Class of intended activity
      */
     private void proceedToActivity(Class activity) {
         Intent intent = new Intent(this, activity);
         startActivity(intent);
     }
 
-    /*
-     *  @brief  { Display message on device }
+    /**
+     *  Display message on device
      *
-     *  @params { Message to be displayed }
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_SHORT).show();

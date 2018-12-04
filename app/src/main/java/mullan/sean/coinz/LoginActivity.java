@@ -22,9 +22,8 @@ public class LoginActivity extends AppCompatActivity {
     // TESTING MODE FLAG
     private boolean testMode;
 
-    /*
-     *  @brief  { Set log in view, create listeners for buttons and parse
-     *            entered user data }
+    /**
+     *   Set log in view, create listeners for buttons and parse entered user data
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +79,13 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(new Intent(this, RegisterActivity.class)));
     }
 
-    /*
-     *  @brief  { Check that fields are not empty }
+    /**
+     *  Check that fields are not empty
      *
-     *  @params { User entered email and password }
+     *  @param email user entered email
+     *  @param password user entered password
      *
-     *  @return { True if fields are not empty, false otherwise }
+     *  @return True if fields are not empty, false otherwise
      */
     private boolean detailsEntered(String email, String password) {
         if (TextUtils.isEmpty(email)) {
@@ -100,11 +100,12 @@ public class LoginActivity extends AppCompatActivity {
         return true;
     }
 
-    /*
-     *  @brief  { Authenticate email and password with firebase, proceed
-     *            to main activity if details are correct }
+    /**
+     *  Authenticate email and password with firebase, proceed
+     *  to main activity if details are correct
      *
-     *  @params { User entered email and password }
+     *  @param email user entered email
+     *  @param password user entered password
      */
     private void authenticateUser(String email, String password) {
         mProgressBar.setVisibility(View.VISIBLE);
@@ -128,10 +129,10 @@ public class LoginActivity extends AppCompatActivity {
                         });
     }
 
-    /*
-     *  @brief  { Display message on device }
+    /**
+     *  Display message on device
      *
-     *  @params { Message to be displayed }
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(LoginActivity.this, message, Toast.LENGTH_SHORT).show();

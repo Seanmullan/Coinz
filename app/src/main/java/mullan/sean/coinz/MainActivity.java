@@ -27,6 +27,10 @@ import java.util.Locale;
 
 import org.json.*;
 
+/*
+ *  Executes the data retrieval sequence upon boot up of the app after log in, and hosts all the
+ *  fragments in the application which are navigated using the bottom navigation view.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "C_MAIN";
@@ -42,9 +46,9 @@ public class MainActivity extends AppCompatActivity {
     // TESTING MODE FLAG
     private boolean testMode;
 
-    /*
-     *  @brief  { Set main activity view, load in map fragment as default
-     *            and create a listener for the user authentication state }
+    /**
+     *   Set main activity view, load in map fragment as default
+     *   and create a listener for the user authentication state
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +92,11 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    /*
-     *  @brief  { Controls the basic navigation of the application. Navigation is
-     *            disabled whilst the user is playing the daily bonus game. When a
-     *            button is selected on the navigation bar, the corresponding
-     *            fragment is loaded }
+    /**
+     *   Controls the basic navigation of the application. Navigation is
+     *   disabled whilst the user is playing the daily bonus game. When a
+     *   button is selected on the navigation bar, the corresponding
+     *   fragment is loaded
      */
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = item -> {
@@ -125,10 +129,10 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             };
 
-    /*
-     *  @brief { Load the appropriate fragment into the container }
+    /**
+     *   Load the appropriate fragment into the container
      *
-     *  @params  { The fragment to be loaded }
+     *  @param fragment The fragment to be loaded
      */
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -137,8 +141,8 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
     }
 
-    /*
-     *  @brief  { Set up the toolbar overflow menu }
+    /**
+     *   Set up the toolbar overflow menu
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -146,9 +150,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    /*
-     *  @brief  { Handles logic for overflow menu, including log out }
-     *  TODO: Add a "help" option to menu
+    /**
+     *   Handles logic for overflow menu (button for log out)
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -156,18 +159,17 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 mAuth.signOut();
                 return true;
-
             default:
                 // Action was not recognized, invoke the superclass to handle it
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    /*
-     *  @brief  { This method begins the process of data retrieval upon boot up.
-     *            The first step is to retrieve the users document, then the Data
-     *            class is populated given the users document. See the populateData()
-     *            method for details. }
+    /**
+     *   This method begins the process of data retrieval upon boot up.
+     *   The first step is to retrieve the users document, then the Data
+     *   class is populated given the users document. See the populateData()
+     *   method for details.
      */
     private void getUserDocument(final String uid) {
         DocumentReference   docRef = mFirestore.collection("users").document(uid);
@@ -235,29 +237,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /*
-     *  @brief  { This procedure will prompt the data class to pull in the appropriate
-     *            data from firebase and populate the relevant fields in the Data class.
+    /**
+     *   This procedure will prompt the data class to pull in the appropriate
+     *   data from firebase and populate the relevant fields in the Data class.
      *
-     *            We want to retrieve existing data in all cases (that is, either it is the
-     *            same day or a new day has begun). If it is the same day, then we use the
-     *            retrieved existing data to populate the Data class. If it is a new day,
-     *            then we use the existing data to identify what documents need to be deleted
-     *            in firebase (i.e. for clearing the local wallet)
+     *   We want to retrieve existing data in all cases (that is, either it is the
+     *   same day or a new day has begun). If it is the same day, then we use the
+     *   retrieved existing data to populate the Data class. If it is a new day,
+     *   then we use the existing data to identify what documents need to be deleted
+     *   in firebase (i.e. for clearing the local wallet)
      *
-     *            If a new day has begun, then we want to execute the following steps:
-     *              1) Update the last saved date for the user on firebase
-     *              2) Clear uncollected coins so that they can be replaced with new coins
-     *              3) Clear 'spare change' i.e. collected coins and received coins
-     *              4) Retrieve the new map data from the Informatics server
-     *              5) Parse the received data
-     *              6) Update the Data class fields and firebase with the new data
+     *   If a new day has begun, then we want to execute the following steps:
+     *     1) Update the last saved date for the user on firebase
+     *     2) Clear uncollected coins so that they can be replaced with new coins
+     *     3) Clear 'spare change' i.e. collected coins and received coins
+     *     4) Retrieve the new map data from the Informatics server
+     *     5) Parse the received data
+     *     6) Update the Data class fields and firebase with the new data
      *
-     *            When these processes are completed, the Map Fragment is prompted to
-     *            retrieve the most up to date data from the Data class.
+     *   When these processes are completed, the Map Fragment is prompted to
+     *   retrieve the most up to date data from the Data class.
      *
-     *           Note: We have to retrieve the existing data regardless, as the ID's
-     *           are required in order to identify which coins we want to remove }
+     *   Note: We have to retrieve the existing data regardless, as the ID's
+     *   are required in order to identify which coins we want to remove
      */
     private void populateData() {
 
@@ -363,10 +365,10 @@ public class MainActivity extends AppCompatActivity {
         Data.retrieveAllTransactions();
     }
 
-    /*
-     *  @brief  { Retrieves that json map data from Informatics server. Upon successful
-     *            retrieval, processNewMapData is called to parse the data and store it
-     *            in the Data class }
+    /**
+     *   Retrieves that json map data from Informatics server. Upon successful
+     *   retrieval, processNewMapData is called to parse the data and store it
+     *   in the Data class
      */
     private void retrieveNewMapData() {
         String mapUrl  = "http://homepages.inf.ed.ac.uk/stg/coinz/";
@@ -395,8 +397,8 @@ public class MainActivity extends AppCompatActivity {
         downloadTask.execute(url);
     }
 
-    /*
-     *  @return  { Current date in format yyyy/mm/dd }
+    /**
+     *  @return  Current date in format yyyy/mm/dd
      */
     private String getCurrentDate() {
         LocalDateTime date = LocalDateTime.now();
@@ -404,11 +406,11 @@ public class MainActivity extends AppCompatActivity {
         return dateFormat.format(date);
     }
 
-    /*
-     *  @brief  { Extracts the json data into exchange rates and coin data.
-     *            The coin data is parsed and a Coin object is created, which
-     *            is then passed to the Data class for local storage and
-     *            firebase storage }
+    /**
+     *   Extracts the json data into exchange rates and coin data.
+     *   The coin data is parsed and a Coin object is created, which
+     *   is then passed to the Data class for local storage and
+     *   firebase storage
      */
     @SuppressWarnings("unchecked")
     private void processNewMapData(String json) throws JSONException {
@@ -466,9 +468,9 @@ public class MainActivity extends AppCompatActivity {
         MapFragment.updateMapData(getApplicationContext());
     }
 
-    /*
-     *  @brief  { Add authentication state listener to firebase authentication
-     *            instance }
+    /**
+     *   Add authentication state listener to firebase authentication
+     *   instance
      */
     @Override
     protected void onStart() {
@@ -477,8 +479,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /*
-     *  @brief  { Remove authentication state listener if activity is stopped }
+    /**
+     *   Remove authentication state listener if activity is stopped
      */
     @Override
     protected void onStop() {
