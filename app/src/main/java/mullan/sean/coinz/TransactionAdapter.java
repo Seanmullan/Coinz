@@ -11,12 +11,15 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Adapter class to store Transaction objects
+ */
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.MyViewHolder> {
 
     private ArrayList<Transaction> mTransactions;
 
-    /*
-     *  @brief  { Provides a reference to the views for each data item }
+    /**
+     *   Provides a reference to the views for each data item (gold amount and date of transaction)
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView mDate;
@@ -28,36 +31,39 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         }
     }
 
-    /*
-     *  @brief  { Adapter constructor }
+    /**
+     *   @param transactions ArrayList of Transaction objects
      */
     public TransactionAdapter(ArrayList<Transaction> transactions) {
         this.mTransactions = transactions;
     }
 
-    /*
-     *  @brief  { Create new views (invoked by the layout manager) }
+    /**
+     *  Inflate layout of list of transactions (invoked by layout manager)
      */
     @Override
     @Nonnull
-    public TransactionAdapter.MyViewHolder onCreateViewHolder(@Nonnull ViewGroup parent, int viewType) {
+    public TransactionAdapter.MyViewHolder onCreateViewHolder(@Nonnull ViewGroup parent,
+                                                              int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.trans_list_row, parent, false);
         return new TransactionAdapter.MyViewHolder(itemView);
     }
 
-    /*
-     *  @brief  { Replace the contents of a view (invoked by the layout manager) }
+    /**
+     *   Bind the transaction data to the specified row in transactions list
+     *   (invoked by the layout manager)
      */
     @Override
     public void onBindViewHolder(@Nonnull TransactionAdapter.MyViewHolder holder, int position) {
         Transaction transaction = mTransactions.get(position);
         holder.mDate.setText(transaction.getDate());
-        holder.mGoldAdded.setText(String.format(Locale.getDefault(), "%.6f", transaction.getGoldAdded()));
+        holder.mGoldAdded.setText(String.format(
+                Locale.getDefault(), "%.6f",transaction.getGoldAdded()));
     }
 
-    /*
-     *  @return  { Size of your transactions ArrayList (invoked by the layout manager) }
+    /**
+     *  @return  Size of transactions ArrayList (invoked by the layout manager)
      */
     @Override
     public int getItemCount() {

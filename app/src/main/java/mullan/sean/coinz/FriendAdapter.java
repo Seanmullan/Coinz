@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import javax.annotation.Nonnull;
 
 /**
- *   Adapter class to store Friend objects
+ *   Adapter class to store User objects that represent the users friends
  */
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHolder> {
 

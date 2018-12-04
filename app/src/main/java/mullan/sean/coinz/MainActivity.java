@@ -27,7 +27,7 @@ import java.util.Locale;
 
 import org.json.*;
 
-/*
+/**
  *  Executes the data retrieval sequence upon boot up of the app after log in, and hosts all the
  *  fragments in the application which are navigated using the bottom navigation view.
  */

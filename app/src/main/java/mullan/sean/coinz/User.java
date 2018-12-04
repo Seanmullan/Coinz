@@ -1,5 +1,8 @@
 package mullan.sean.coinz;
 
+/**
+ *  A User object stores the users ID, username, email and the amount of gold they have
+ */
 public class User {
 
     private String mUserId;
@@ -31,7 +34,7 @@ public class User {
     }
 
     /*
-     *  @return  { True if and only if ID's are equal }
+     *  @return True if and only if ID's are equal
      */
     @Override
     public boolean equals(Object user) {

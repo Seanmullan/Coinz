@@ -25,7 +25,10 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
-
+/**
+ *  Fragment that hosts the users Collected and Received coins, and handles transferring coins
+ *  to the users bank account or to a friend
+ */
 public class WalletFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_WALLET";
@@ -58,23 +61,23 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
     private int mFriendTransferTotal;
     private int mBankTransferTotal;
 
-    /*
-     * @brief { Required empty public constructor }
+    /**
+     *  Required empty public constructor
      */
     public WalletFragment(){}
 
-    /*
-     *  @brief  { Invoke onCreate of superclass }
+    /**
+     *   Invoke onCreate() of superclass
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    /*
-     *  @brief  { Inflate the layout, and initialise adapter and recycler view.
-     *            Set default display to collected coins, and add listeners
-     *            for collected and received buttons }
+    /**
+     *   Inflate the layout, and initialise adapter and recycler view.
+     *   Set default display to collected coins, and add listeners
+     *   for collected and received buttons
      */
     @Override
     public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
@@ -132,8 +135,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mExchangeRates = Data.getRates();
     }
 
-    /*
-     *  @brief  { Update the recycler view with new data }
+    /**
+     *   Update the recycler view with new data
      */
     @Override
     public void onClick(View v) {
@@ -152,10 +155,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes received recycler invisible
-     *            and makes collected recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes received recycler invisible
+     *   and makes collected recycler visible, then notifies adapter
+     *   of data change
      */
     private void updateCollectedView() {
         mCollectedCoins = Data.getCollectedCoins();
@@ -164,10 +167,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mCollectedAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes friends recycler invisible
-     *            and makes recycler recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes friends recycler invisible
+     *   and makes recycler recycler visible, then notifies adapter
+     *   of data change
      */
     private void updateReceivedView() {
         mReceivedCoins = Data.getReceivedCoins();
@@ -176,10 +179,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         mReceivedAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { In the background, retrieve most up to date data from received coins.
-     *            If retrieved data is different from current data, then update the UI
-     *            with most up to date data }
+    /**
+     *   In the background, retrieve most up to date data from received coins.
+     *   If retrieved data is different from current data, then update the UI
+     *   with most up to date data
      */
     private void updateReceivedCoinsInBackground() {
         Log.d(TAG, "[updateReceivedCoinsInBackground] updating...");
@@ -202,10 +205,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         });
     }
 
-    /*
-     *  @brief  { Provides options for the user to transfer their selected coins to their
-     *            bank account or a friend. If a transfer is not currently in process,
-      *           then begin the transfer }
+    /**
+     *   Provides options for the user to transfer their selected coins to their
+     *   bank account or a friend. If a transfer is not currently in process,
+     *   then begin the transfer
      */
     private void openSendDialogue() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
@@ -257,16 +260,16 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         builder.show();
     }
 
-    /*
-     *  @brief  { This method handles the transfer of coins from a players local wallet to their
-     *            bank account. It imposes the the limit of the player only being able to transfer
-     *            a maximum of 25 coins that they have collected into their bank account per day
-     *            (no limit for received coins). For each coin, the value of gold is calculated
-     *            given the current exchange rate for that currency, and the coin is removed
-     *            from the appropriate collection. Once all coins have been processed, a
-     *            transaction object is created that includes the current date and the amount
-     *            of gold all the selected coins were worth. The transaction object is then
-     *            passed to the data class for processing }
+    /**
+     *   Handles the transfer of coins from a players local wallet to their bank account.
+     *   It imposes the the limit of the player only being able to transfer a maximum of 25
+     *   coins that they have collected into their bank account per day (no limit for received
+     *   coins). For each coin, the value of gold is calculated given the current exchange rate
+     *   for that currency, and the coin is removed from the appropriate collection.
+     *
+     *   Once all coins have been processed, a transaction object is created that includes the
+     *   current date and the amount of gold all the selected coins were worth. The transaction
+     *   object is theE passed to the data class for processing.
      */
     private void transferToBankAccount() {
         ArrayList<Coin> selectedCoins;
@@ -366,10 +369,10 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /*
-     *  @brief  { Opens a dialogue with the user to select the friend they wish to send
-     *            their selected coins to. The user is informed if the process was successful
-     *            or not and view will be updated if successful }
+    /**
+     *   Opens a dialogue with the user to select the friend they wish to send
+     *   their selected coins to. The user is informed if the process was successful
+     *   or not and view will be updated if successful
      */
     private void friendTransfer() {
         // Clear the previously selected friend
@@ -411,14 +414,15 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         builder.show();
     }
 
-    /*
-     *  @brief  { Identifies all the selected coins and invokes a method in the Data class to
-     *            send each coin the the specified friend. The Data method returns the total
-     *            number of coins that have been successfully transferred so far, this number is
-     *            used to identify when the transfer has completed. The mFriendsTransferTotal
-     *            variable is used to count both successful and unsuccessful transfers - again to
-     *            identify when all coins have had an attempted transfer. These parameters are
-     *            cleared once the process has completed }
+    /**
+     *   Identifies all the selected coins and invokes a method in the Data class to
+     *   send each coin the the specified friend. The Data method returns the total
+     *   number of coins that have been successfully transferred so far, this number is
+     *   used to identify when the transfer has completed.
+     *
+     *   The mFriendsTransferTotal variable is used to count both successful and unsuccessful
+     *   transfers - again to identify when all coins have had an attempted transfer. These
+     *   parameters are cleared once the process has completed.
      */
     private void sendCoinsToFriend() {
         ArrayList<Coin> selectedCoins;
@@ -503,8 +507,9 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /*
-     *  @return  { Selected coins from given collection }
+    /**
+     * @param collection A collection from the set {Collected, Received}
+     * @return  Selected coins from given collection
      */
     private ArrayList<Coin> getSelectedCoins(String collection) {
         ArrayList<Coin> selectedCoins = new ArrayList<>();
@@ -524,10 +529,9 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
         return selectedCoins;
     }
 
-    /*
-     *  @brief  { Display message on device }
-     *
-     *  @params { Message to be displayed }
+    /**
+     *  Display message on device
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();

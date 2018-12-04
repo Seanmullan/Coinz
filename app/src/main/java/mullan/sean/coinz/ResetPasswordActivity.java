@@ -11,15 +11,17 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ *  Activity to reset users password
+ */
 public class ResetPasswordActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText     mInputEmail;
     private ProgressBar  mProgressBar;
 
-    /*
-     *  @brief  { Set reset password view, create listeners for buttons and parse
-     *            entered user data }
+    /**
+     *   Set reset password view, create listeners for buttons and parsr entered user data
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +52,10 @@ public class ResetPasswordActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
     }
 
-    /*
-     *  @brief  { Send email to reset users password }
+    /**
+     *  Send email to reset users password
      *
-     *  @params { User entered email }
+     *  @param email User entered email
      */
     private void resetPassword(String email) {
         mProgressBar.setVisibility(View.VISIBLE);
@@ -68,10 +70,10 @@ public class ResetPasswordActivity extends AppCompatActivity {
                 });
     }
 
-    /*
-     *  @brief  { Display message on device }
+    /**
+     *  Display message on device
      *
-     *  @params { Message to be displayed }
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(ResetPasswordActivity.this, message, Toast.LENGTH_SHORT).show();

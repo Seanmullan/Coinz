@@ -12,6 +12,9 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ *  Activity to Log in existing users
+ */
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;

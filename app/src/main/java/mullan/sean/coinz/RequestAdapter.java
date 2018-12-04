@@ -14,6 +14,9 @@ import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 
+/**
+ *  Adapter class for User objects that represent friend requests
+ */
 public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHolder> {
 
     private static final String TAG = "C_REQUESTADAPTER";
@@ -22,8 +25,10 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
     private ClickListener   acceptListener;
     private ClickListener   declineListener;
 
-    /*
-     *  @brief  { Adapter constructor }
+    /**
+     * @param requests ArrayList of User objects which represent friend requests
+     * @param accept   ClickListener for accepting a friend request
+     * @param decline  ClickListener for declining a friend request
      */
     public RequestAdapter(ArrayList<User> requests, ClickListener accept, ClickListener decline) {
         this.mRequests = requests;
@@ -31,8 +36,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
         this.declineListener = decline;
     }
 
-    /*
-     *  @brief  { Provides a reference to the views for each data item }
+    /**
+     *   Provides a reference to the views for each data item (username, email, accept and decline)
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder implements OnClickListener {
         private TextView username;
@@ -68,8 +73,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
         }
     }
 
-    /*
-     *  @brief  { Create new views (invoked by the layout manager) }
+    /**
+     *  Inflate layout of list of friend requests (invoked by layout manager)
      */
     @Override
     @Nonnull
@@ -79,8 +84,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
         return new RequestAdapter.MyViewHolder(itemView, acceptListener, declineListener);
     }
 
-    /*
-     *  @brief  { Replace the contents of a view (invoked by the layout manager) }
+    /**
+     *   Bind the user data to the specified row in requests list (invoked by the layout manager)
      */
     @Override
     public void onBindViewHolder(@Nonnull RequestAdapter.MyViewHolder holder, int position) {
@@ -89,8 +94,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
         holder.email.setText(request.getEmail());
     }
 
-    /*
-     *  @return  { Size of your friend requests ArrayList (invoked by the layout manager) }
+    /**
+     *  @return  Size of friend requests ArrayList (invoked by the layout manager) }
      */
     @Override
     public int getItemCount() {
