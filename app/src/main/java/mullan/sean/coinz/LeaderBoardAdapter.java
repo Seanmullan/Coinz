@@ -11,12 +11,15 @@ import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Adapter class to store User objects for leader board
+ */
 public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.MyViewHolder> {
 
     private ArrayList<User> mUsers;
 
-    /*
-     *  @brief  { Provides a reference to the views for each data item }
+    /**
+     *   Provides a reference to the views for each data item (username and amount of gold)
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView mUsername;
@@ -28,15 +31,15 @@ public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.
         }
     }
 
-    /*
-     *  @brief  { Adapter constructor }
+    /**
+     * @param users ArrayList of User objects
      */
     public LeaderBoardAdapter(ArrayList<User> users) {
         this.mUsers = users;
     }
 
-    /*
-     *  @brief  { Create new views (invoked by the layout manager) }
+    /**
+     *  Inflate layout of list of users (invoked by layout manager)
      */
     @Override
     @Nonnull
@@ -46,8 +49,8 @@ public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.
         return new LeaderBoardAdapter.MyViewHolder(itemView);
     }
 
-    /*
-     *  @brief  { Replace the contents of a view (invoked by the layout manager) }
+    /**
+     *   Bind the user data to the specified row in the users list (invoked by the layout manager)
      */
     @Override
     public void onBindViewHolder(@Nonnull LeaderBoardAdapter.MyViewHolder holder, int position) {
@@ -56,8 +59,8 @@ public class LeaderBoardAdapter extends RecyclerView.Adapter<LeaderBoardAdapter.
         holder.mGold.setText(String.format(Locale.getDefault(), "%.6f", user.getGold()));
     }
 
-    /*
-     *  @return  { Size of your transactions ArrayList (invoked by the layout manager) }
+    /**
+     *  @return Size of users ArrayList (invoked by the layout manager)
      */
     @Override
     public int getItemCount() {

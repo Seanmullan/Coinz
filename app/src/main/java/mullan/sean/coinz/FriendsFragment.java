@@ -20,6 +20,10 @@ import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Fragment that hosts friends and friend request details. Each friend and friend request
+ *   contains the username and email address of the user
+ */
 public class FriendsFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_FRIENDS";
@@ -31,23 +35,23 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
     private FriendAdapter     mFriendsAdapter;
     private RequestAdapter    mRequestAdapter;
 
-    /*
-     * @brief { Required empty public constructor }
+    /**
+     *  Required empty public constructor
      */
     public FriendsFragment() {}
 
-    /*
-     *  @brief  { Invoke onCreate of superclass }
+    /**
+     *   Invoke onCreate() of superclass
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    /*
-     *  @brief  { Inflate the layout, and initialise adapter and recycler view.
-     *            Set default display to collected coins, and add listeners
-     *            for collected and received buttons }
+    /**
+     *   Inflate the layout, and initialise adapter and recycler view.
+     *   Set default display to collected coins, and add listeners
+     *   for collected and received buttons
      */
     @Override
     public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
@@ -112,8 +116,8 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         return view;
     }
 
-    /*
-     *  @brief  { Update the recycler view with new data }
+    /**
+     *   Update the recycler view with new data
      */
     @Override
     public void onClick(View v) {
@@ -132,10 +136,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes requests recycler invisible
-     *            and makes friends recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes requests recycler invisible
+     *   and makes friends recycler visible, then notifies adapter
+     *   of data change
      */
     private void updateFriendsView() {
         mFriends = Data.getFriends();
@@ -144,10 +148,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         mFriendsAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes friends recycler invisible
-     *            and makes requests recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes friends recycler invisible
+     *   and makes requests recycler visible, then notifies adapter
+     *   of data change
      */
     private void updateRequestsView() {
         mRequests = Data.getRequests();
@@ -156,10 +160,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         mRequestAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { In the background, retrieve most up to date data from friends collection.
-     *            If retrieved data is different from current data, then update the UI
-     *            with most up to date data }
+    /**
+     *   In the background, retrieve most up to date data from friends collection.
+     *   If retrieved data is different from current data, then update the UI
+     *   with most up to date data
      */
     private void updateFriendsInBackground() {
         Log.d(TAG, "[updateFriendsInBackground] updating...");
@@ -182,10 +186,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         });
     }
 
-    /*
-     *  @brief  { In the background, retrieve most up to date data from friend requests.
-     *            If retrieved data is different from current data, then update the UI
-     *            with most up to date data }
+    /**
+     *   In the background, retrieve most up to date data from friend requests.
+     *   If retrieved data is different from current data, then update the UI
+     *   with most up to date data
      */
     private void updateRequestsInBackground() {
         Log.d(TAG, "[updateRequestsInBackground] updating...");
@@ -208,10 +212,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         });
     }
 
-    /*
-     *  @brief  { Opens a dialogue with the user and prompts them to enter the email
-     *            address of the friend they wish to add. The sendFriendRequest method
-     *            is then called in the data class with the entered email }
+    /**
+     *   Opens a dialogue with the user and prompts them to enter the email
+     *   address of the friend they wish to add. The sendFriendRequest method
+     *   is then called in the data class with the entered email
      */
     private void openAddFriendDialogue() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getLayoutInflater().getContext());
@@ -254,10 +258,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         builder.show();
     }
 
-    /*
-     *  @brief  { Checks the validity of the friend request }
+    /**
+     *  Checks the validity of the friend request
      *
-     *  @return { True if friend request is valid, false otherwise }
+     *  @return True if friend request is valid, false otherwise
      */
     private boolean isRequestValid(String email) {
         // Check that the user is not entering their own email address
@@ -285,10 +289,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         return true;
     }
 
-    /*
-     *  @brief  { Display message on device }
+    /**
+     *   Display message on device
      *
-     *  @params { Message to be displayed }
+     *  @param message Message to be displayed
      */
     private void displayToast(String message) {
         Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();

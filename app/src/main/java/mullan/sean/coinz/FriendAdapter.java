@@ -10,12 +10,15 @@ import java.util.ArrayList;
 
 import javax.annotation.Nonnull;
 
+/**
+ *   Adapter class to store Friend objects
+ */
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHolder> {
 
     private ArrayList<User> mFriends;
 
-    /*
-     *  @brief  { Provides a reference to the views for each data item }
+    /**
+     *   Provides a reference to the views for each data item (username and email)
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView mUsername;
@@ -27,15 +30,15 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
         }
     }
 
-    /*
-     *  @brief  { Adapter constructor }
+    /**
+     * @param friends ArrayList of User objects that represent the users friends
      */
     public FriendAdapter(ArrayList<User> friends) {
         this.mFriends = friends;
     }
 
-    /*
-     *  @brief  { Create new views (invoked by the layout manager) }
+    /**
+     *  Inflate layout of list of coins (invoked by layout manager)
      */
     @Override
     @Nonnull
@@ -45,8 +48,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
         return new FriendAdapter.MyViewHolder(itemView);
     }
 
-    /*
-     *  @brief  { Replace the contents of a view (invoked by the layout manager) }
+    /**
+     *   Bind the user data to the specified row in the friends list (invoked by the layout manager)
      */
     @Override
     public void onBindViewHolder(@Nonnull FriendAdapter.MyViewHolder holder, int position) {
@@ -55,8 +58,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.MyViewHold
         holder.mEmail.setText(friend.getEmail());
     }
 
-    /*
-     *  @return  { Size of your friends ArrayList (invoked by the layout manager) }
+    /**
+     *  @return  Size of the friends ArrayList (invoked by the layout manager)
      */
     @Override
     public int getItemCount() {

@@ -14,6 +14,10 @@ import android.widget.Button;
 import java.util.ArrayList;
 import javax.annotation.Nonnull;
 
+/**
+ *   Fragment that hosts friends and global leader board. Each row contains the username
+ *   and the amount of gold that user has
+ */
 public class LeaderBoardFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "C_BOARD";
@@ -25,23 +29,23 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
     private LeaderBoardAdapter mFriendsAdapter;
     private LeaderBoardAdapter mGlobalAdapter;
 
-    /*
-     * @brief { Required empty public constructor }
+    /**
+     *  Required empty public constructor
      */
     public LeaderBoardFragment() {}
 
-    /*
-     *  @brief  { Invoke onCreate of superclass }
+    /**
+     *   Invoke onCreate() of superclass
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    /*
-     *  @brief  { Inflate the layout, and initialise adapter and recycler view.
-     *            Set default display to friends leader board, and add listeners
-     *            for friends and global buttons }
+    /**
+     *   Inflate the layout, and initialise adapter and recycler view.
+     *   Set default display to friends leader board, and add listeners
+     *   for friends and global buttons
      */
     @Override
     public View onCreateView(@Nonnull LayoutInflater inflater, ViewGroup container,
@@ -90,8 +94,8 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
         return view;
     }
 
-    /*
-     *  @brief  { Update the recycler view with new data }
+    /**
+     *   Update the recycler view with new data
      */
     @Override
     public void onClick(View v) {
@@ -108,10 +112,9 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes global recycler invisible
-     *            and makes friends recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes global recycler invisible and makes friends
+     *   recycler visible, then notifies adapter of data change
      */
     private void updateFriendsView() {
         mFriends = Data.getFriendLeaderBoard();
@@ -122,10 +125,9 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
         mFriendsAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { Retrieves updated data, makes friends recycler invisible
-     *            and makes global recycler visible, then notifies adapter
-     *            of data change }
+    /**
+     *   Retrieves updated data, makes friends recycler invisible and makes global
+     *   recycler visible, then notifies adapter of data change
      */
     private void updateGlobalView() {
         mGlobal = Data.getGlobalLeaderBoard();
@@ -135,10 +137,10 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
         mGlobalAdapter.notifyDataSetChanged();
     }
 
-    /*
-     *  @brief  { In the background, retrieve most up to date data from leader board.
-     *            If retrieved data is different from current data, then update the UI
-     *            with most up to date data }
+    /**
+     *   In the background, retrieve most up to date data from leader board.
+     *   If retrieved data is different from current data, then update the UI
+     *   with most up to date data
      */
     private void updateLeaderBoardInBackground() {
         Log.d(TAG, "[updateLeaderBoardInBackground] updating...");
