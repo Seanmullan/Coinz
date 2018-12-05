@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import javax.annotation.Nonnull;
 
@@ -62,6 +63,10 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
         // Populate UI with current data
         mFriends  = Data.getFriends();
         mRequests = Data.getRequests();
+
+        // Sort friends and requests by username
+        mFriends.sort(Comparator.comparing(User::getUsername));
+        mRequests.sort(Comparator.comparing(User::getUsername));
 
         // Retrieve most up to date friend and requests data in background
         updateFriendsInBackground();
