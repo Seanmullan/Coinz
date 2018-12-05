@@ -65,7 +65,13 @@ public class MapFragment extends Fragment implements
     /**
      *   Required empty public constructor
      */
-    public MapFragment(){}
+    public MapFragment() {
+        Log.d(TAG, "[MapFragment] constructing");
+        mUncollectedCoins = new ArrayList<>();
+        mMarkers          = new HashMap<>();
+        mBonusUsed        = false;
+        mMapBoxConnected  = false;
+    }
 
     /**
      *   Invoke onCreate of superclass
@@ -98,8 +104,6 @@ public class MapFragment extends Fragment implements
 
         txtBonus = view.findViewById(R.id.double_value);
         txtTimer = view.findViewById(R.id.timer);
-
-        mMapBoxConnected = false;
 
         // Get Mapbox instance
         Mapbox.getInstance(inflater.getContext(), getString(R.string.access_token));
@@ -311,7 +315,9 @@ public class MapFragment extends Fragment implements
         Log.d(TAG, "[update markers] updating markers");
         IconFactory iconFactory = IconFactory.getInstance(context);
         Icon icon;
+        Log.d(TAG, "[UPDATEMARKERS], coin size:" + mUncollectedCoins.size());
         for (Coin coin : mUncollectedCoins) {
+            Log.d(TAG, "[UPDATEMARKERS], for loop started");
             switch (coin.getCurrency()) {
                 case Data.DOLR:
                     icon = iconFactory.fromResource(R.drawable.dolr);

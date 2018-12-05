@@ -32,7 +32,7 @@
         android:layout_marginEnd="85dp"
         android:layout_marginBottom="-15dp"
         android:backgroundTint="@android:color/holo_green_dark"
-        android:text="Accecpt"
+        android:text="Accept"
         android:textSize="10sp" />
 
     <TextView

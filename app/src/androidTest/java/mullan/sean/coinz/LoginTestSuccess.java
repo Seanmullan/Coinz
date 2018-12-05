@@ -9,9 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.*;
 import static android.support.test.espresso.assertion.ViewAssertions.*;
 import static android.support.test.espresso.matcher.ViewMatchers.*;
@@ -19,7 +17,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.*;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,38 +80,21 @@ public class LoginTestSuccess {
         appCompatButton.perform(click());
 
         try {
-            Thread.sleep(4000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());
-
-        ViewInteraction appCompatTextView = onView(
-                allOf(withId(R.id.title), withText("Log out"),
+        ViewInteraction textView = onView(
+                allOf(withText("Coinz"),
                         childAtPosition(
-                                childAtPosition(
-                                        withClassName(is("android.support.v7.view.menu.ListMenuItemView")),
-                                        0),
+                                allOf(withId(R.id.my_toolbar),
+                                        childAtPosition(
+                                                withId(R.id.container),
+                                                0)),
                                 0),
                         isDisplayed()));
-        appCompatTextView.perform(click());
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        ViewInteraction button = onView(
-                allOf(withId(R.id.btn_login),
-                        childAtPosition(
-                                childAtPosition(
-                                        IsInstanceOf.instanceOf(android.view.ViewGroup.class),
-                                        0),
-                                3),
-                        isDisplayed()));
-        button.check(matches(isDisplayed()));
+        textView.check(matches(isDisplayed()));
     }
 
     private static Matcher<View> childAtPosition(

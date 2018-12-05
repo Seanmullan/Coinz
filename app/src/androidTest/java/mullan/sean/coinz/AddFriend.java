@@ -11,9 +11,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+/**
+ *  This program is run
+ */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class MapTest {
+public class AddFriend {
 
     @Rule
     public ActivityTestRule<LoginActivity> mActivityTestRule = new ActivityTestRule<LoginActivity>(LoginActivity.class) {
@@ -28,10 +31,6 @@ public class MapTest {
 
     @Test
     public void testMap() {
-        try {
-            Thread.sleep(50000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
     }
 }
