@@ -1,6 +1,9 @@
 package mullan.sean.coinz;
 
 
+import android.content.Context;
+import android.content.Intent;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
@@ -24,6 +27,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -31,12 +35,25 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 
+/**
+ *  This class sends a friend request from test@outlook.com to seanmullan1997@gmail.com, then logs
+ *  into the seanmullan1997@gmail.com account and accepts the friend request, then logs back into
+ *  the test@outlook.com account and checks that the seanmullan1997 user is in the friends list.
+ */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class LoginActivityTest {
+public class AddFriendTest {
 
     @Rule
-    public ActivityTestRule<LoginActivity> mActivityTestRule = new ActivityTestRule<>(LoginActivity.class);
+    public ActivityTestRule<LoginActivity> mActivityTestRule = new ActivityTestRule<LoginActivity>(LoginActivity.class) {
+        @Override
+        protected Intent getActivityIntent() {
+            Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            Intent result = new Intent(targetContext, LoginActivity.class);
+            result.putExtra("testMode",true);
+            return result;
+        }
+    };
 
     @Rule
     public GrantPermissionRule mGrantPermissionRule =
@@ -44,17 +61,14 @@ public class LoginActivityTest {
                     "android.permission.ACCESS_FINE_LOCATION");
 
     @Test
-    public void loginActivityTest() {
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
+    public void addFriendTest() {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        ViewInteraction appCompatEditText2 = onView(
+        ViewInteraction appCompatEditText = onView(
                 allOf(withId(R.id.email),
                         childAtPosition(
                                 childAtPosition(
@@ -62,9 +76,9 @@ public class LoginActivityTest {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText2.perform(replaceText("test@outlook.com"));
+        appCompatEditText.perform(replaceText("test@outlook.com"));
 
-        ViewInteraction appCompatEditText4 = onView(
+        ViewInteraction appCompatEditText1 = onView(
                 allOf(withId(R.id.password),
                         childAtPosition(
                                 childAtPosition(
@@ -72,7 +86,7 @@ public class LoginActivityTest {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText4.perform(replaceText("password"), closeSoftKeyboard());
+        appCompatEditText1.perform(replaceText("password"), closeSoftKeyboard());
 
         ViewInteraction appCompatButton = onView(
                 allOf(withId(R.id.btn_login), withText("Log in"),
@@ -84,11 +98,8 @@ public class LoginActivityTest {
                         isDisplayed()));
         appCompatButton.perform(click());
 
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(3000);
+            Thread.sleep(4000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -130,10 +141,12 @@ public class LoginActivityTest {
                                         withClassName(is("android.widget.ScrollView")),
                                         0),
                                 3)));
-        appCompatButton1.perform(scrollTo(), click());
+        appCompatButton1.perform(click());
 
+        // Sometimes running the app with espresso tests can be extremely slow, so leave 20
+        // seconds for the friend request to send
         try {
-            Thread.sleep(2000);
+            Thread.sleep(20000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -150,16 +163,13 @@ public class LoginActivityTest {
                         isDisplayed()));
         appCompatTextView.perform(click());
 
-        // Added a sleep statement to match the app's execution delay.
-        // The recommended way to handle such scenarios is to use Espresso idling resources:
-        // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
         try {
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        ViewInteraction appCompatEditText5 = onView(
+        ViewInteraction appCompatEditText2 = onView(
                 allOf(withId(R.id.email),
                         childAtPosition(
                                 childAtPosition(
@@ -167,9 +177,9 @@ public class LoginActivityTest {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText5.perform(replaceText("seanmullan1997@gmail.com"), closeSoftKeyboard());
+        appCompatEditText2.perform(replaceText("seanmullan1997@gmail.com"), closeSoftKeyboard());
 
-        ViewInteraction appCompatEditText6 = onView(
+        ViewInteraction appCompatEditText3 = onView(
                 allOf(withId(R.id.password),
                         childAtPosition(
                                 childAtPosition(
@@ -177,7 +187,7 @@ public class LoginActivityTest {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatEditText6.perform(replaceText("password"), closeSoftKeyboard());
+        appCompatEditText3.perform(replaceText("password"), closeSoftKeyboard());
 
         ViewInteraction appCompatButton2 = onView(
                 allOf(withId(R.id.btn_login), withText("Log in"),
@@ -190,7 +200,7 @@ public class LoginActivityTest {
         appCompatButton2.perform(click());
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(7000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -205,7 +215,7 @@ public class LoginActivityTest {
                         isDisplayed()));
         bottomNavigationItemView1.perform(click());
 
-        ViewInteraction appCompatButton10 = onView(
+        ViewInteraction appCompatButton3 = onView(
                 allOf(withId(R.id.btn_requests), withText("Requests"),
                         childAtPosition(
                                 childAtPosition(
@@ -213,10 +223,10 @@ public class LoginActivityTest {
                                         0),
                                 0),
                         isDisplayed()));
-        appCompatButton10.perform(click());
+        appCompatButton3.perform(click());
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -232,10 +242,90 @@ public class LoginActivityTest {
         appCompatButton4.perform(click());
 
         try {
-            Thread.sleep(10000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());
+
+        ViewInteraction appCompatTextView2 = onView(
+                allOf(withId(R.id.title), withText("Log out"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.v7.view.menu.ListMenuItemView")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatTextView2.perform(click());
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction appCompatEditText4 = onView(
+                allOf(withId(R.id.email),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatEditText4.perform(replaceText("test@outlook.com"), closeSoftKeyboard());
+
+        ViewInteraction appCompatEditText5 = onView(
+                allOf(withId(R.id.password),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.TextInputLayout")),
+                                        0),
+                                0),
+                        isDisplayed()));
+        appCompatEditText5.perform(replaceText("password"), closeSoftKeyboard());
+
+        ViewInteraction appCompatButton5 = onView(
+                allOf(withId(R.id.btn_login), withText("Log in"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withClassName(is("android.support.design.widget.CoordinatorLayout")),
+                                        0),
+                                3),
+                        isDisplayed()));
+        appCompatButton5.perform(click());
+
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction bottomNavigationItemView2 = onView(
+                allOf(withId(R.id.navigation_friends),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.navigation),
+                                        0),
+                                1),
+                        isDisplayed()));
+        bottomNavigationItemView2.perform(click());
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        ViewInteraction textView = onView(
+                allOf(withId(R.id.friends_name), withText("seanmullan1997"),
+                        childAtPosition(
+                                childAtPosition(
+                                    withId(R.id.friends_recycler_view),
+                                                0),
+                                    0),
+                        isDisplayed()));
+        textView.check(matches(withText("seanmullan1997")));
     }
 
     private static Matcher<View> childAtPosition(

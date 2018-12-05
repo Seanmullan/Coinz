@@ -554,6 +554,7 @@ public final class Data {
      *  "requests" subcollection
      */
     public static void sendFriendRequest(String email, OnEventListener<String> event) {
+        Log.d(TAG, "[sendFriendRequest] sending friend request...");
         // Perform query to find user with specified email address
         mUsersRef.whereEqualTo("email", email).get()
                 .addOnCompleteListener(queryTask -> {
@@ -582,6 +583,7 @@ public final class Data {
                             mUsersRef.document(friendId).collection(REQUESTS).document(userId)
                                     .set(userMap).addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
+                                    Log.d(TAG, "[sendFriendRequest] success");
                                     event.onSuccess("success");
                                 } else {
                                     event.onFailure(task.getException());
