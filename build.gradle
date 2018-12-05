@@ -26,12 +26,3 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
-task enableMockLocationForTestsOnDevice(type: Exec) {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def sdkDir = properties.getProperty('sdk.dir')
-    def adb = "$sdkDir/platform-tools/adb"
-    description 'enable mock location on connected android device before executing any android test'
-    commandLine "$adb", 'shell', 'appops', 'set', 'indian.fig.whatsaround', 'android:mock_location', 'allow'
-}
