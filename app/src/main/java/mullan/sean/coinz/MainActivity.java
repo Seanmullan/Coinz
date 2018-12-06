@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                // Initialise user document reference and retrieve map data
+                // Initialise user document
                 mUserDoc = document;
                 Data.setUserDocSnap(document);
 
@@ -205,17 +205,13 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "[getUserDocument] gold is null");
                 }
 
-                // Get amount of collected coins user has transferred into bank account today
-                Double transferred = document.getDouble("collectedTransferred");
-                if (transferred != null) {
-                    Data.setCollectedTransferred(transferred.intValue());
-                } else {
-                    Log.d(TAG, "[getUserDocument] collected transferred is null");
-                }
-
-                // If a new day has begun, set bonusUsed to false and update the flag on firebase
+                // If a new day has begun, set bonusUsed to false (which updates the flag on
+                // firebase), clear the collectedTransferred field and update the lastSavedDate
+                // with the current date
                 if (!mCurrentDate.equals(mLastSavedDate)) {
                     Data.setBonusUsed(false);
+                    Data.clearCollectedTransferred();
+                    Data.updateDate(getCurrentDate());
                 } else {
                     // Otherwise, get bonusUsed flag and set it in the Data class
                     Boolean bonusUsed = document.getBoolean("bonusUsed");
@@ -223,6 +219,14 @@ public class MainActivity extends AppCompatActivity {
                         Data.setBonusUsed(bonusUsed);
                     } else {
                         Log.d(TAG, "[getUserDocument] bonus used is null");
+                    }
+
+                    // And get amount of collected coins user has transferred into bank account today
+                    Double transferred = document.getDouble("collectedTransferred");
+                    if (transferred != null) {
+                        Data.setCollectedTransferred(transferred.intValue());
+                    } else {
+                        Log.d(TAG, "[getUserDocument] collected transferred is null");
                     }
                 }
 
@@ -248,18 +252,17 @@ public class MainActivity extends AppCompatActivity {
      *   in firebase (i.e. for clearing the local wallet)
      *
      *   If a new day has begun, then we want to execute the following steps:
-     *     1) Update the last saved date for the user on firebase
-     *     2) Clear uncollected coins so that they can be replaced with new coins
-     *     3) Clear 'spare change' i.e. collected coins and received coins
-     *     4) Retrieve the new map data from the Informatics server
-     *     5) Parse the received data
-     *     6) Update the Data class fields and firebase with the new data
+     *     1) Clear uncollected coins so that they can be replaced with new coins
+     *     2) Clear 'spare change' i.e. collected coins and received coins
+     *     3) Retrieve the new map data from the Informatics server
+     *     4) Parse the received data
+     *     5) Update the Data class fields and firebase with the new data
+     *
+     *   If a new day has not begun, then the Data class is populated with the data
+     *   that currently exists on firebase.
      *
      *   When these processes are completed, the Map Fragment is prompted to
      *   retrieve the most up to date data from the Data class.
-     *
-     *   Note: We have to retrieve the existing data regardless, as the ID's
-     *   are required in order to identify which coins we want to remove
      */
     private void populateData() {
 
@@ -289,8 +292,6 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved uncollected coins");
                 if (!mCurrentDate.equals(mLastSavedDate)) {
-                    Data.updateDate(getCurrentDate());
-                    Data.clearCollectedTransferred();
                     Data.clearAllCoinsFromCollection(Data.UNCOLLECTED);
                     retrieveNewMapData();
                 }
@@ -442,9 +443,9 @@ public class MainActivity extends AppCompatActivity {
             Coin coin = new Coin(id, value, currency, location);
             Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
-                public void onSuccess(Object object) {
+                public void onSuccess(Object numberProcessed) {
                     Log.d(TAG, "Coin successfully added with ID: " + id);
-                    if ((int) object == mCoinData.length()) {
+                    if ((int) numberProcessed == mCoinData.length()) {
                         Log.d(TAG, "All coins successfully processed");
                     }
                 }
