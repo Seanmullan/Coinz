@@ -63,7 +63,7 @@ public class MapFragment extends Fragment implements
     private LocationEngine       locationEngine;
 
     /**
-     *   Required empty public constructor
+     *   Constructor to initialise static variables
      */
     public MapFragment() {
         Log.d(TAG, "[MapFragment] constructing");
@@ -315,9 +315,7 @@ public class MapFragment extends Fragment implements
         Log.d(TAG, "[update markers] updating markers");
         IconFactory iconFactory = IconFactory.getInstance(context);
         Icon icon;
-        Log.d(TAG, "[UPDATEMARKERS], coin size:" + mUncollectedCoins.size());
         for (Coin coin : mUncollectedCoins) {
-            Log.d(TAG, "[UPDATEMARKERS], for loop started");
             switch (coin.getCurrency()) {
                 case Data.DOLR:
                     icon = iconFactory.fromResource(R.drawable.dolr);
@@ -353,7 +351,6 @@ public class MapFragment extends Fragment implements
         for (Coin c : mUncollectedCoins) {
             if (mCurrentLocation.distanceTo(c.getLocation()) <= 25) {
                 collectCoin(c);
-                break;
             }
         }
     }

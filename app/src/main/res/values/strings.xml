@@ -58,7 +58,7 @@
     <string name="msg_transfer_complete">Transfer complete</string>
     <string name="msg_failed_to_transfer">Failed to transfer</string>
     <string name="msg_select_friend">Please select a friend</string>
-    <string name="msg_successfully_sent_coins">Successfully sent coins to</string>
+    <string name="msg_successfully_sent_coins">Successfully sent coins to </string>
     <string name="msg_failed_to_send">Failed to send</string>
     <string name="msg_please_enable_permissions">Please enable permissions for this application</string>
     <string name="msg_requires_permissions">This application requires the following permissions:</string>

@@ -333,7 +333,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                             updateReceivedView();
                         }
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        Log.d(TAG, "[sendCoinsToFriend] transfer complete");
+                        Log.d(TAG, "[transferToBankAccount] transfer complete");
                         displayToast(getString(R.string.msg_transfer_complete));
                     } else {
                         mBankTransferTotal++;
