@@ -269,7 +269,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
      *
      *   Once all coins have been processed, a transaction object is created that includes the
      *   current date and the amount of gold all the selected coins were worth. The transaction
-     *   object is theE passed to the data class for processing.
+     *   object is then passed to the data class for processing.
      */
     private void transferToBankAccount() {
         ArrayList<Coin> selectedCoins;
@@ -305,12 +305,14 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
             String currency = c.getCurrency();
             double exchange = value * mExchangeRates.get(currency);
             mGoldAmount += exchange;
-            Data.removeCoinFromCollection(c, collection, new OnEventListener<Integer>() {
+            Data.removeCoinFromCollection(c, collection, new OnEventListener<String>() {
 
                 @Override
-                public void onSuccess(Integer numberProcessed) {
+                public void onSuccess(String string) {
+                    mBankTransferTotal++;
+                    Log.d(TAG, "[transferToBankAccount] number processed: " + mBankTransferTotal);
                     // If all coins have been processed
-                    if (numberProcessed == selectedCoins.size()) {
+                    if (mBankTransferTotal == selectedCoins.size()) {
 
                         // Get current date
                         LocalDateTime now = LocalDateTime.now();
@@ -320,10 +322,9 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
                         // Add transaction to firebase
                         Transaction transaction = new Transaction(mGoldAmount, date);
-                        Data.addTransaction(transaction, numberProcessed, collection);
+                        Data.addTransaction(transaction, mBankTransferTotal, collection);
 
-                        // Clear transfer parameters
-                        Data.clearBankTransferCount();
+                        // Clear transfer flag
                         mBankTransferInProgress = false;
 
                         // Update the view
@@ -335,8 +336,6 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "[transferToBankAccount] transfer complete");
                         displayToast(getString(R.string.msg_transfer_complete));
-                    } else {
-                        mBankTransferTotal++;
                     }
                 }
 
@@ -346,8 +345,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                     // If all coins have been processed
                     if (mBankTransferTotal == selectedCoins.size()) {
 
-                        // Clear transfer parameters
-                        Data.clearBankTransferCount();
+                        // Clear transfer flag
                         mBankTransferInProgress = false;
                         mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "[transferToBankAccount] transfer failed");
@@ -449,17 +447,15 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
 
         for (Coin c : selectedCoins) {
             Data.sendCoinToFriend(mSelectedFriend, c, collection,
-                    new OnEventListener<Integer>() {
+                    new OnEventListener<String>() {
                         @Override
-                        public void onSuccess(Integer numberTransferred) {
-                            // If all coins have successfully been transferred, inform user and
-                            // reset transfer parameters
+                        public void onSuccess(String string) {
                             Log.d(TAG, "[sendCoins] successfully sent coin: " + c.getId());
+                            mFriendTransferTotal++;
+                            // If all coins have successfully been transferred
+                            if (mFriendTransferTotal == selectedCoins.size()) {
 
-                            if (numberTransferred == selectedCoins.size()) {
-
-                                // Clear transfer parameters
-                                Data.clearFriendTransferCount();
+                                // Clear transfer flag
                                 mFriendTransferInProgress = false;
                                 mProgressBar.setVisibility(View.INVISIBLE);
 
@@ -472,10 +468,6 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                 displayToast(getString(R.string.msg_successfully_sent_coins)
                                         + mSelectedFriend.getUsername());
                                 Log.d(TAG, "[sendCoinsToFriend] transfer complete");
-
-                            // Otherwise, increment the total count so far
-                            } else {
-                                mFriendTransferTotal++;
                             }
                         }
 
@@ -483,9 +475,8 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                         public void onFailure(Exception e) {
                             mFriendTransferTotal++;
 
-                            // If all coins have been attempted, then clear the transfer parameters
+                            // If all coins have been attempted, then clear the transfer flag
                             if (mFriendTransferTotal == selectedCoins.size()) {
-                                Data.clearFriendTransferCount();
                                 mFriendTransferInProgress = false;
                                 mProgressBar.setVisibility(View.INVISIBLE);
                                 Log.d(TAG, "[sendCoinsToFriend] transfer failed");

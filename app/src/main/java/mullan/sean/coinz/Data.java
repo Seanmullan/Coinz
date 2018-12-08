@@ -23,22 +23,13 @@ import java.util.Map;
 public final class Data {
 
     /*  Most of the variables are hopefully self explanatory, however I've explained the bottom
-     *  four which are more ambiguous:
+     *  two which are more ambiguous:
      *
      *  mCollectedTransferred:  The amount of collected coins (only collected, not received) the
      *                          user has transferred into their bank account on the current day
      *
      *  mUncollectedCoinCount:  The amount of coins that have currently been transferred into the
      *                          "uncollected" subcollection in firebase
-     *
-     *  mFriendTransferCount:   The amount of coins that have currently been transferred from the
-     *                          user to a friend
-     *
-     *  mBankTransferCount:     The amount of coins that have currently been transferred from the
-     *                          users local wallet to their bank account
-     *
-     *  The above three "count" variables get reset after each transfer/transaction - they are
-     *  used so the caller can identify when all coins have successfully been transferred
      */
 
     public static final String UNCOLLECTED  = "uncollected";
@@ -70,8 +61,6 @@ public final class Data {
     private static boolean                mBonusActive;
     private static int                    mCollectedTransferred;
     private static int                    mUncollectedCoinCount;
-    private static int                    mFriendTransferCount;
-    private static int                    mBankTransferCount;
 
     // TESTING MODE FLAG
     private static boolean testMode;
@@ -97,8 +86,6 @@ public final class Data {
         mGoldAmount           = 0;
         mCollectedTransferred = 0;
         mUncollectedCoinCount = 0;
-        mFriendTransferCount  = 0;
-        mBankTransferCount    = 0;
         testMode              = test;
     }
 
@@ -168,14 +155,6 @@ public final class Data {
 
     public static ArrayList<User> getGlobalLeaderBoard() {
         return mGlobalLeaderBoard;
-    }
-
-    public static void clearFriendTransferCount() {
-        mFriendTransferCount = 0;
-    }
-
-    public static void clearBankTransferCount() {
-        mBankTransferCount = 0;
     }
 
     public static String getUsersEmail() {
@@ -375,7 +354,7 @@ public final class Data {
      */
     public static void removeCoinFromCollection(Coin coin,
                                                 final String collection,
-                                                OnEventListener<Integer> event) {
+                                                OnEventListener<String> event) {
         Log.d(TAG,  "[removeCoinFromCollection] removing coin from " + collection);
         // Remove coin from appropriate ArrayList
         switch (collection) {
@@ -396,7 +375,7 @@ public final class Data {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "[removeCoinFromCollection] removed coin " + coin.getId());
-                        event.onSuccess(++mBankTransferCount);
+                        event.onSuccess("");
                     } else {
                         event.onFailure(task.getException());
                     }
@@ -601,17 +580,14 @@ public final class Data {
      *  Removes coin from the collection it currently exists in, then places coin
      *  in the received subcollection of the specified friend. A random ID will be
      *  generated for the coin document. This is to avoid duplicate coin ID's in the
-     *  case that two players send the same coin to a third player. Upon successful
-     *  completion of sending the coin, the method caller is provided with the number
-     *  of coins that have currently been transferred - this is so the caller can
-     *  identify when all coins have been transferred
+     *  case that two players send the same coin to a third player.
      */
     public static void sendCoinToFriend(User friend, Coin coin, String collection,
-                                        OnEventListener<Integer> event) {
+                                        OnEventListener<String> event) {
 
-        removeCoinFromCollection(coin, collection, new OnEventListener<Integer>() {
+        removeCoinFromCollection(coin, collection, new OnEventListener<String>() {
             @Override
-            public void onSuccess(Integer object) {}
+            public void onSuccess(String str) {}
             @Override
             public void onFailure(Exception e) {}
         });
@@ -620,7 +596,7 @@ public final class Data {
         mUsersRef.document(friend.getUserID()).collection(RECEIVED).add(coin.getCoinMap())
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        event.onSuccess(++mFriendTransferCount);
+                        event.onSuccess("");
                     } else {
                         event.onFailure(task.getException());
                     }

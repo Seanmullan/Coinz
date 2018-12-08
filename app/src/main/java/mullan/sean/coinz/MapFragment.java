@@ -49,8 +49,8 @@ public class MapFragment extends Fragment implements
 
     private static final String TAG  = "C_MAP";
 
-    private static ArrayList<Coin>      mUncollectedCoins = new ArrayList<>();
-    private static HashMap<Coin,Marker> mMarkers          = new HashMap<>();
+    private static ArrayList<Coin>      mUncollectedCoins;
+    private static HashMap<Coin,Marker> mMarkers;
     private static MapboxMap            map;
     private static boolean              mBonusUsed;
     private static boolean              mMapBoxConnected;
@@ -348,7 +348,10 @@ public class MapFragment extends Fragment implements
      *   25 metres, then collect the coin
      */
     private void checkProximityToCoins() {
-        for (Coin c : mUncollectedCoins) {
+        // Create a new ArrayList to iterate over to avoid a ConcurrentModificationException
+        // when an coin is removed from the ArrayList
+        ArrayList<Coin> coins = new ArrayList<>(mUncollectedCoins);
+        for (Coin c : coins) {
             if (mCurrentLocation.distanceTo(c.getLocation()) <= 25) {
                 collectCoin(c);
             }
@@ -374,9 +377,9 @@ public class MapFragment extends Fragment implements
         displayToast(msg);
         map.removeMarker(mMarkers.get(coin));
         mUncollectedCoins.remove(coin);
-        Data.removeCoinFromCollection(coin, Data.UNCOLLECTED, new OnEventListener<Integer>() {
+        Data.removeCoinFromCollection(coin, Data.UNCOLLECTED, new OnEventListener<String>() {
             @Override
-            public void onSuccess(Integer object) {
+            public void onSuccess(String string) {
                 Log.d(TAG,
                 "[collectCoin] successfully removed coin from Uncollected with id: " + coin.getId());
             }
