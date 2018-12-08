@@ -258,6 +258,11 @@ public class MainActivity extends AppCompatActivity {
      *     4) Parse the received data
      *     5) Update the Data class fields and firebase with the new data
      *
+     *   We do not want to delete received coins that have been received that day.
+     *   So each received coin is taken in turn, and if the coin has been received
+     *   on the present day, then keep it, otherwise delete it. This is implemented
+     *   in the Data class.
+     *
      *   If a new day has not begun, then the Data class is populated with the data
      *   that currently exists on firebase.
      *
@@ -292,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved uncollected coins");
                 if (!mCurrentDate.equals(mLastSavedDate)) {
-                    Data.clearAllCoinsFromCollection(Data.UNCOLLECTED);
+                    Data.clearOldCoinData(Data.UNCOLLECTED);
                     retrieveNewMapData();
                 }
                 MapFragment.updateMapData(getApplicationContext());
@@ -310,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved collected coins");
                 if (!mCurrentDate.equals(mLastSavedDate)) {
-                    Data.clearAllCoinsFromCollection(Data.COLLECTED);
+                    Data.clearOldCoinData(Data.COLLECTED);
                 }
             }
             @Override
@@ -324,9 +329,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String object) {
                 Log.d(TAG, "Successfully retrieved received coins");
-                if (!mCurrentDate.equals(mLastSavedDate)) {
-                    Data.clearAllCoinsFromCollection(Data.RECEIVED);
-                }
+                Data.clearOldCoinData(Data.RECEIVED);
             }
             @Override
             public void onFailure(Exception e) {
@@ -440,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
             LatLng location = new LatLng(coords.getDouble(1), coords.getDouble(0));
 
             // Create coin from parsed data and add it to uncollected coins in Data class
-            Coin coin = new Coin(id, value, currency, location);
+            Coin coin = new Coin(id, value, currency, location, "");
             Data.addCoinToCollection(coin, Data.UNCOLLECTED, new OnEventListener() {
                 @Override
                 public void onSuccess(Object numberProcessed) {

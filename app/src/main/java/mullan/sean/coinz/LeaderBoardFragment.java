@@ -55,7 +55,6 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
 
         // Populate UI with current data
         mFriends = Data.getFriendLeaderBoard();
-        Log.d(TAG, "Friends:" + mFriends);
         mGlobal  = Data.getGlobalLeaderBoard();
 
         // Retrieve most up to date leader board data in background

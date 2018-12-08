@@ -17,13 +17,15 @@ public class Coin {
     private String  currency;
     private LatLng  location;
     private boolean isSelected;
+    private String  date;
 
-    Coin(String id, double value, String currency, LatLng location) {
+    Coin(String id, double value, String currency, LatLng location, String date) {
         this.id         = id;
         this.value      = value;
         this.currency   = currency;
         this.location   = location;
         this.isSelected = false;
+        this.date       = date;
     }
 
     public String getId() {
@@ -54,6 +56,10 @@ public class Coin {
         isSelected = selected;
     }
 
+    public String getDate() {
+        return date;
+    }
+
     /**
      *  @return True if and only if ID's are equal
      */
@@ -75,6 +81,7 @@ public class Coin {
         coinData.put("currency", this.currency);
         coinData.put("longitude", this.location.getLongitude());
         coinData.put("latitude", this.location.getLatitude());
+        coinData.put("date", this.date);
         return coinData;
     }
 }

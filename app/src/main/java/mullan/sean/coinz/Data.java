@@ -9,10 +9,13 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -279,10 +282,12 @@ public final class Data {
     }
 
     /**
-     *  This procedure removes all documents within the specified collection
-     *  argument, and removes the coin from the corresponding ArrayList
+     *  This procedure removes documents within the specified collection
+     *  argument, and removes the coin from the corresponding ArrayList.
+     *  In the case of received coins, the coin should is kept if it was
+     *  received on the present day, and deleted otherwise.
      */
-    public static void clearAllCoinsFromCollection(String collection) {
+    public static void clearOldCoinData(String collection) {
         Log.d(TAG, "[clearAllCoinsFromCollection] clearing coins from " + collection);
         Iterator<Coin> i;
         switch (collection) {
@@ -301,6 +306,12 @@ public final class Data {
         }
         while (i.hasNext()) {
             Coin c = i.next();
+            // Do not delete the coin if it has been received today
+            if (collection.equals(RECEIVED)) {
+                if (c.getDate().equals(getCurrentDate())) {
+                    continue;
+                }
+            }
             mUserDocRef.collection(collection).document(c.getId()).delete();
             i.remove();
         }
@@ -580,7 +591,8 @@ public final class Data {
      *  Removes coin from the collection it currently exists in, then places coin
      *  in the received subcollection of the specified friend. A random ID will be
      *  generated for the coin document. This is to avoid duplicate coin ID's in the
-     *  case that two players send the same coin to a third player.
+     *  case that two players send the same coin to a third player. The date that the
+     *  coin is sent is added to the document.
      */
     public static void sendCoinToFriend(User friend, Coin coin, String collection,
                                         OnEventListener<String> event) {
@@ -593,7 +605,9 @@ public final class Data {
         });
 
         // Add coin to friends received collection
-        mUsersRef.document(friend.getUserID()).collection(RECEIVED).add(coin.getCoinMap())
+        Map<String,Object> coinData = coin.getCoinMap();
+        coinData.put("date", getCurrentDate());
+        mUsersRef.document(friend.getUserID()).collection(RECEIVED).add(coinData)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         event.onSuccess("");
@@ -687,7 +701,8 @@ public final class Data {
         double latitude   = (double) coinData.get("latitude");
         double longitude  = (double) coinData.get("longitude");
         LatLng location   = new LatLng(latitude, longitude);
-        return new Coin(id, value, currency, location);
+        String date       = (String) coinData.get("date");
+        return new Coin(id, value, currency, location, date);
     }
 
     /**
@@ -733,5 +748,14 @@ public final class Data {
                 Log.d(TAG, "[updateDate] failed " + task.getException());
             }
         });
+    }
+
+    /**
+     *  @return  Current date in format yyyy/mm/dd
+     */
+    private static String getCurrentDate() {
+        LocalDateTime date = LocalDateTime.now();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ENGLISH);
+        return dateFormat.format(date);
     }
 }

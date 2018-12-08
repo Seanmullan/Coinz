@@ -466,7 +466,7 @@ public class WalletFragment extends Fragment implements View.OnClickListener {
                                     updateReceivedView();
                                 }
                                 displayToast(getString(R.string.msg_successfully_sent_coins)
-                                        + mSelectedFriend.getUsername());
+                                        + " " + mSelectedFriend.getUsername());
                                 Log.d(TAG, "[sendCoinsToFriend] transfer complete");
                             }
                         }
