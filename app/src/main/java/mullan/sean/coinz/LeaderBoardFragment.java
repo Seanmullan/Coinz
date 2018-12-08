@@ -164,19 +164,4 @@ public class LeaderBoardFragment extends Fragment implements View.OnClickListene
             }
         });
     }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
 }

@@ -302,19 +302,4 @@ public class FriendsFragment extends Fragment implements View.OnClickListener {
     private void displayToast(String message) {
         Toast.makeText(getLayoutInflater().getContext(), message, Toast.LENGTH_SHORT).show();
     }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
 }

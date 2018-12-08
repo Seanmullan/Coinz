@@ -88,28 +88,4 @@ public class BankFragment extends Fragment {
         mRecyclerViewTrans.setAdapter(mTransAdapter);
         return view;
     }
-
-    /**
-     *   Invoke onStart() of superclass
-     */
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    /**
-     *   Invoke onResume() of superclass
-     */
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    /**
-     *   Invoke onPause() of superclass
-     */
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
 }
